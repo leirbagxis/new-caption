@@ -18,4 +18,14 @@ model User {
   firstName String
   collaborator Boolean @default(false)
   createAt DateTime @default(now())
+  channel Channel[]
+}
+
+model Channel {
+  channelId BigInt @unique
+  title String
+  caption  String    @default("<b>👑 - </b> @LegendaBrBot")
+  settings Json
+  ownerId BigInt
+  owner User @relation(fields: [ownerId], references: [userId])
 }
