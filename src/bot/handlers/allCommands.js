@@ -1,13 +1,18 @@
+import { saveUser } from "../sevices/userService.js";
 import { cleanCommand, commands, createKeyboard, formatText } from "../util.js";
 
 const allCommands = () => {
   return async (ctx, next) => {
     const user = await ctx.getChat()
+
     const params = {
-      firstName: user.first_name,
-      userId: user.id
+      userId: user.id,
+      firstName: user.first_name
     }
 
+    await saveUser(params)
+
+    // Commands
     if(ctx.message && ctx.message.text){
       const { message_id, text, entities } = ctx.message;
       const parms = cleanCommand(text)
@@ -23,6 +28,8 @@ const allCommands = () => {
       }
 
     }
+
+    // Edit Messages Commands
     if(ctx.callbackQuery) {
       const { data } = ctx.callbackQuery
       const command = commands[data];
