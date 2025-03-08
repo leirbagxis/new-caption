@@ -28,4 +28,13 @@ model Channel {
   settings Json
   ownerId BigInt
   owner User @relation(fields: [ownerId], references: [userId])
+  buttons Buttons[]
+}
+
+model Buttons {
+  buttonId String @id @default(uuid())
+  text String
+  url String
+  channelId BigInt
+  channelOwner Channel @relation(fields: [channelId], references: [channelId])
 }
