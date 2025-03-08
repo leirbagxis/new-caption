@@ -62,11 +62,15 @@ const profileCommand = () => {
                         text: "Configure Agora",
                         webApp: `${process.env.WEBAPP_URL}/${user.id}/${channelId[1]}`
                     }]
-                    
+
+                    const deleteChannelButton = [{
+                        text: "Deletar Canal",
+                        callback_data: "del_" + channelId[1]
+                    }]
 
                     return ctx.editMessageText(formatText(message, params), {
                         parse_mode: "HTML",
-                        ...createKeyboard([...configureChannelWeb, ...buttons], 1)
+                        ...createKeyboard([...configureChannelWeb, ...deleteChannelButton, ...buttons], 1)
                     })
                 }
             }

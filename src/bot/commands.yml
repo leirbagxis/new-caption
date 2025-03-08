@@ -24,7 +24,9 @@ commands:
         callback_data: "profile.info"
 
   profile.user.channels.mychannel:
-    message: "<b>📢 Canal Selecionado</b>\n\n<blockquote>🔹 <b>Nome:</b> {channelName}\n🔹 <b>ID:</b> `{channelId}`</blockquote>\n\n<b>⚙️ Aqui você pode gerenciar as configurações de legendas deste canal. Edite conforme necessário e salve as alterações.</b>"
+    message: "<b>📢 Canal Selecionado</b>\n\n<blockquote>🔹 <b>Nome:</b> {channelName}\n🔹 <b>ID:</b> <code>{channelId}</code></blockquote>\n\n<b>⚙️ Aqui você pode gerenciar as configurações de legendas deste canal. Edite conforme necessário e salve as alterações.</b>"
+    confirm_delete: "<b>⚠️ Confirmar Remoção</b>\n\n<blockquote>Você tem certeza que deseja remover o canal <b>{channelName}</b>?\nIsso desativará as legendas automáticas para este canal.</blockquote>\n\n<b>Esta ação não pode ser desfeita.</b> Toque no botão abaixo para confirmar."
+    success_delete: "<b>✅ Canal Removido</b>\n\n<blockquote>O canal <b>{channelName}</b> foi removido com sucesso. As legendas automáticas não serão mais adicionadas a este canal.</blockquote>\n\n<b>Você pode adicioná-lo novamente a qualquer momento, se desejar.</b>"
     buttons:
       - text: "⬅️ Voltar"
         callback_data: "profile.user.channels"
