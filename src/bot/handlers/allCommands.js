@@ -3,44 +3,57 @@ import { cleanCommand, commands, createKeyboard, formatText } from "../util.js";
 
 const allCommands = () => {
   return async (ctx, next) => {
-    const user = await ctx.getChat()
+    
+    try {
 
-    const params = {
-      userId: user.id,
-      firstName: user.first_name
-    }
+      const user = await ctx.getChat()
 
-    await saveUser(params)
+      const params = {
+        userId: user.id,
+        firstName: user.first_name
+      }
 
-    // Commands
-    if(ctx.message && ctx.message.text){
-      const { message_id, text, entities } = ctx.message;
-      const parms = cleanCommand(text)
-      const command = commands[parms]
-      const { message, buttons } = command
+      await saveUser(params)
+
+      // Commands
+      if(ctx.message && ctx.message.text){
+        const { message_id, text, entities } = ctx.message;
+        const parms = cleanCommand(text)
+        const command = commands[parms]
+        const { message, buttons } = command
+        
+        if(command) {        
+          return ctx.reply(formatText(message, params), {
+            parse_mode: "HTML",
+            reply_to_message_id: message_id,
+            ...createKeyboard(buttons)
+          })
+        }
+
+      }
+
+      // Edit Messages Commands
+      if(ctx.callbackQuery) {
+        const { data } = ctx.callbackQuery
+        const command = commands[data];
+        const { message, buttons } = command
+
+        if(data !== "profile.info") {
+          return ctx.editMessageText(formatText(message, params), {
+            parse_mode: "HTML",
+            ...createKeyboard(buttons)
+          })
+        }
+      }
       
-      if(command) {        
-        return ctx.reply(formatText(message, params), {
-          parse_mode: "HTML",
-          reply_to_message_id: message_id,
+    } catch (error) {
+      console.log("erro ao atualizar " + error);
+      const { message, buttons } = commands["start"]
+
+      return ctx.editMessageText(formatText("<b>❌ Clique no Botão Abaixo!</b>"), {
+          parse_mode:  "HTML",
           ...createKeyboard(buttons)
-        })
-      }
-
-    }
-
-    // Edit Messages Commands
-    if(ctx.callbackQuery) {
-      const { data } = ctx.callbackQuery
-      const command = commands[data];
-      const { message, buttons } = command
-
-      if(data !== "profile.info") {
-        return ctx.editMessageText(formatText(message, params), {
-          parse_mode: "HTML",
-          ...createKeyboard(buttons)
-        })
-      }
+      })
     }
     
 

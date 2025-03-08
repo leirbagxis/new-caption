@@ -4,6 +4,13 @@ const getUserById = async (userId) => {
     const findUser = await connection.user.findUnique({
         where: {
             userId
+        },
+        include: {
+            channel: {
+                include: {
+                    buttons: true
+                }
+            }
         }
     })
 

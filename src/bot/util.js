@@ -17,10 +17,10 @@ const formatText = (text, params = {}) => {
   return text.replace(/{(\w+)}/g, (_,key) => params[key] || `${key}`)
 }
 
-const createKeyboard = (dynamicButtons = [], staticsButtons = [], columns = 2) => {
+const createKeyboard = (dynamicButtons = [], columns = 2) => {
   const buttons = [
     ...dynamicButtons.map(btn => {
-      if (btn.web_app) return Markup.button.webApp(btn.text, btn.web_app);
+      if (btn.webApp) return Markup.button.webApp(btn.text, btn.webApp);
       if (btn.url) return Markup.button.url(btn.text, btn.url);
       if (btn.callback_data) return Markup.button.callback(btn.text, btn.callback_data);
       return null;
@@ -37,6 +37,14 @@ const createKeyboard = (dynamicButtons = [], staticsButtons = [], columns = 2) =
   )
 }
 
+const formatDate = (date) => {
+  const ndate = new Date(date)
+  const day = String(ndate.getDate()).padStart(2, '0')
+  const month = String(ndate.getMonth() + 1).padStart(2, '0')
+  const year= ndate.getFullYear()
+
+  return `${day}/${month}/${year}`
+}
 
 
-export { commands, cleanCommand, formatText, createKeyboard }
+export { commands, cleanCommand, formatText, createKeyboard, formatDate }

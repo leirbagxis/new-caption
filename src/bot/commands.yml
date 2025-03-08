@@ -23,6 +23,12 @@ commands:
       - text: "⬅️ Voltar"
         callback_data: "profile.info"
 
+  profile.user.channels.mychannel:
+    message: "<b>📢 Canal Selecionado</b>\n\n<blockquote>🔹 <b>Nome:</b> {channelName}\n🔹 <b>ID:</b> `{channelId}`</blockquote>\n\n<b>⚙️ Aqui você pode gerenciar as configurações de legendas deste canal. Edite conforme necessário e salve as alterações.</b>"
+    buttons:
+      - text: "⬅️ Voltar"
+        callback_data: "profile.user.channels"
+
   help:
     message: "<b>🆘 Guia Rápido para Configuração</b>\n\n💡 Ativar as <b>Legendas Automáticas</b> no seu canal é simples:\n\n1️⃣ <b>Adicione o bot</b> {botUsername} ao seu canal.\n2️⃣ Conceda as seguintes permissões:\n   ✔️ Editar mensagens\n   ✔️ Fixar mensagens\n   ✔️ Publicar postagens\n   ✔️ Convidar usuários via link\n\n<blockquote><b>📌 Após isso, o bot enviará uma confirmação para você, é só confimar e o bot será ativado e pré configurado automaticamente.</b></blockquote>\n\n<b>Caso não funcione, encaminhe qualquer mensagem do seu canal mencionando o nome do canal para ativá-lo manualmente.</b>"
     buttons:
@@ -37,7 +43,7 @@ commands:
       - text: "❓ Ajuda"
         callback_data: "help"
 
-  adicionar:
+  toadd:
     message: "<b>❔ Confirmação necessária, <a href='tg://user?id={botId}'>{firstName}</a></b>\n\n<b><i>Você realmente deseja vincular o seguinte canal ao bot?</i></b>\n\n<blockquote>📌 <b>Canal:</b> <i>{channelName}</i>\n🔗 <b>ID:</b> <code>{channelId}</code></blockquote>\n\n✅ Se sim, clique em <b>Confirmar</b> para prosseguir.\n❌ Caso contrário, clique em <b>Cancelar</b>.\n\n⚠️ <i>Após a confirmação, o bot começará a gerenciar as legendas automáticas neste canal.</i>"
     exist_error: "<b><i>💁 <a href='tg://user?id={botId}'>Adicionar</a> • Este canal já foi adicionado anteriormente</i></b>"
     permision_error: "<b><i>⁉️ <a href='tg://user?id={botId}'>Adicionar</a> • Permissões Insuficientes</i></b>\n<blockquote><b><i>⚠️ O bot precisa de permissões especiais. Consulte a aba <a href='tg://user?id={botId}'>Ajuda</a></i></b></blockquote>"
