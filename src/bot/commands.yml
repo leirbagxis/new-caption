@@ -1,0 +1,56 @@
+commands:
+  start:
+    message: "<b>👋 Olá, <a href='tg://user?id={botId}'>{firstName}</a>!</b>\n\n🤖 Eu estou aqui para automatizar as descrições das suas postagens no <a href='tg://user?id={botId}'>Canal</a>!\n\n✨ Com o sistema de <b>Legendas Inteligentes</b>, suas publicações sempre terão descrições personalizadas e organizadas.\n\n📖 Consulte a aba <a href='tg://user?id={botId}'>🆘 Como Usar</a> para aprender a configurar tudo rapidamente!"
+    buttons:
+      - text: "📋 Meus Dados"
+        callback_data: "profile.info"
+      - text: "🆘 Como Usar"
+        callback_data: "help"
+      - text: "ℹ️ Sobre"
+        callback_data: "about"
+
+  profile.info:
+    message: "<b>📊 Informações da Conta</b>\n\n👤 <b>Usuário:</b> {firstName}\n🆔 <b>ID:</b> <code>{userId}</code>\n📆 <b>Registrado em:</b> {register}\n\n📡 <b>Canais Vinculados:</b> {countChannel}\n\n⚙️ Gerencie suas configurações e acompanhe os canais vinculados pelo menu abaixo!"
+    buttons:
+      - text: "📝 Meus Canais"
+        callback_data: "profile.user.channels"
+      - text: "🏠 Início"
+        callback_data: "start"
+  
+  profile.user.channels:
+    message: "<b>🏷️ Canais Vinculados</b>\n\n<blockquote>📌 Estes são os canais onde o bot está configurado para adicionar legendas automaticamente às postagens.</blockquote>\n\n<b>🔄 Se o bot for removido de um canal, ele deixará de aplicar as legendas e será removido automaticamente.</b>"
+    buttons:
+      - text: "⬅️ Voltar"
+        callback_data: "profile.info"
+
+  help:
+    message: "<b>🆘 Guia Rápido para Configuração</b>\n\n💡 Ativar as <b>Legendas Automáticas</b> no seu canal é simples:\n\n1️⃣ <b>Adicione o bot</b> {botUsername} ao seu canal.\n2️⃣ Conceda as seguintes permissões:\n   ✔️ Editar mensagens\n   ✔️ Fixar mensagens\n   ✔️ Publicar postagens\n   ✔️ Convidar usuários via link\n\n<blockquote><b>📌 Após isso, o bot enviará uma confirmação para você, é só confimar e o bot será ativado e pré configurado automaticamente.</b></blockquote>\n\n<b>Caso não funcione, encaminhe qualquer mensagem do seu canal mencionando o nome do canal para ativá-lo manualmente.</b>"
+    buttons:
+      - text: "🏠 Início"
+        callback_data: "start"
+
+  about:
+    message: "<b>ℹ️ Sobre o Bot</b>\n\n<blockquote>📌 <b>Versão:</b> <i>{botVersion}</i>\n⚙️ <b>Desenvolvido Por:</b> <i>{ownerUser}</i></blockquote>\n\n🚀 Este bot foi criado para facilitar a adição de <b>legendas automáticas</b> em postagens de canais, tornando a gestão de conteúdo mais eficiente e dinâmica.\n\n📢 Para aprender a configurar, consulte a aba <a href='tg://user?id={botId}'>Ajuda</a>!"
+    buttons:
+      - text: "🏠 Início"
+        callback_data: "start"
+      - text: "❓ Ajuda"
+        callback_data: "help"
+
+  adicionar:
+    message: "<b>❔ Confirmação necessária, <a href='tg://user?id={botId}'>{firstName}</a></b>\n\n<b><i>Você realmente deseja vincular o seguinte canal ao bot?</i></b>\n\n<blockquote>📌 <b>Canal:</b> <i>{channelName}</i>\n🔗 <b>ID:</b> <code>{channelId}</code></blockquote>\n\n✅ Se sim, clique em <b>Confirmar</b> para prosseguir.\n❌ Caso contrário, clique em <b>Cancelar</b>.\n\n⚠️ <i>Após a confirmação, o bot começará a gerenciar as legendas automáticas neste canal.</i>"
+    exist_error: "<b><i>💁 <a href='tg://user?id={botId}'>Adicionar</a> • Este canal já foi adicionado anteriormente</i></b>"
+    permision_error: "<b><i>⁉️ <a href='tg://user?id={botId}'>Adicionar</a> • Permissões Insuficientes</i></b>\n<blockquote><b><i>⚠️ O bot precisa de permissões especiais. Consulte a aba <a href='tg://user?id={botId}'>Ajuda</a></i></b></blockquote>"
+    notfound_error: "<b>🚫 Ops, <a href='tg://user?id={botId}'>{firstName}</a>!</b>\n\n<b><i>O bot ainda não está no seu <a href='tg://user?id={botId}'>Canal</a>, então não conseguimos configurá-lo.</i></b>\n\n✨ Para resolver isso:\n1️⃣ Adicione {botUsername} ao seu Canal.\n2️⃣ Dê as permissões corretas para que ele funcione.\n3️⃣ Tente novamente a vinculação!\n\n📌 Para mais detalhes, veja a aba <a href='tg://user?id={botId}'>Ajuda</a>!"
+    success: "<b>🎉 Sucesso, <a href='tg://user?id={botId}'>{firstName}</a>!</b>\n\n<b><i>✅ Seu <a href='tg://user?id={botId}'>Canal</a> foi vinculado com sucesso ao bot!</i></b>\n\n🔥 Agora, todas as postagens serão acompanhadas automaticamente por legendas personalizadas.\n\n📌 Se precisar ajustar alguma configuração, consulte a aba <a href='tg://user?id={botId}'>Ajuda</a>!"
+    cancel: "<b><i>🔄 <a href='tg://user?id={botId}'>Adicionar</a> • Operação Cancelada!</i></b>\n<blockquote><b><i>❌ Se precisar de ajuda para adicionar o <a href='tg://user?id={botId}'>Canal</a>, consulte a aba <a href='tg://user?id={botId}'>Ajuda</a> e siga as instruções.</i></b></blockquote>"
+    buttons:
+      - text: "📢 Canais"
+        callback_data: "profile.info"
+      - text: "🏠 Início"
+        callback_data: "start"
+    error_buttons:
+      - text: "📢 Ajuda"
+        callback_data: "help"
+      - text: "🏠 Início"
+        callback_data: "start"

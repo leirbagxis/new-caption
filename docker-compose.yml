@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker  
+      - POSTGRES_DB=captiondbbr
+    volumes:
+      - caption_pg_data:/postgresql
+
+
+volumes:
+  caption_pg_data:
