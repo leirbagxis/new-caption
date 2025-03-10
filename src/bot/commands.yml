@@ -54,7 +54,7 @@ commands:
     cancel: "<b><i>🔄 <a href='tg://user?id={botId}'>Adicionar</a> • Operação Cancelada!</i></b>\n<blockquote><b><i>❌ Se precisar de ajuda para adicionar o <a href='tg://user?id={botId}'>Canal</a>, consulte a aba <a href='tg://user?id={botId}'>Ajuda</a> e siga as instruções.</i></b></blockquote>"
     buttons:
       - text: "📢 Canais"
-        callback_data: "profile.info"
+        callback_data: "profile.user.channels"
       - text: "🏠 Início"
         callback_data: "start"
     error_buttons:

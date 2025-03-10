@@ -4,18 +4,17 @@ import { cleanCommand, commands, createKeyboard, formatDate, formatText } from "
 const profileCommand = () => {
     return async(ctx, next) => {
         
-        try {
+        try {        
             
-            const user = await ctx.getChat()
-            const params = {
-                userId: user.id,
-                firstName: user.first_name
-            }
-        
-            const save = await saveUser(params)
-
-            // Edit Messages Commands
+            // Edit Messages Commands profile
             if(ctx.callbackQuery) {
+                const user = await ctx.getChat()
+                const params = {
+                    userId: user.id,
+                    firstName: user.first_name
+                }
+            
+                const save = await saveUser(params)
                 const { data } = ctx.callbackQuery
                 
                 const userInfo = await getUserById(user.id)
@@ -79,10 +78,10 @@ const profileCommand = () => {
             console.log("erro ao atualizar " + error);
             const { message, buttons } = commands["start"]
 
-            return ctx.editMessageText(formatText("<b>❌ Clique no Botão Abaixo!</b>"), {
-                parse_mode:  "HTML",
-                ...createKeyboard(buttons)
-            })
+            // return ctx.editMessageText(formatText("<b>❌ Clique no Botão Abaixo!</b>"), {
+            //     parse_mode:  "HTML",
+            //     ...createKeyboard(buttons)
+            // })
         }
 
         next()
