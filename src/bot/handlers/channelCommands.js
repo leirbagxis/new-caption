@@ -109,7 +109,7 @@ const channelCommands = () => {
                 if(data.startsWith('rr_')) {
                     const { message, reconfigure_message, reconfigure_failure, buttons } =  commands["profile.user.channels.mychannel"];
                     const channelId = data.split("_")
-                    const getTgInfoChannel = await ctx.telegram.getChat(channelId[1])                    console.log(getTgInfoChannel);
+                    const getTgInfoChannel = await ctx.telegram.getChat(channelId[1])
 
                     const reloadConfig = await updateChannelService({
                         channelId: getTgInfoChannel.id,
