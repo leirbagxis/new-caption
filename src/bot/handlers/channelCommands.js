@@ -1,6 +1,6 @@
 import { deleteChannelById, getChannelByChannelID, saveChannelService } from "../sevices/channelService.js";
 import { getUserById, saveUser } from "../sevices/userService.js"
-import { commands, createKeyboard, formatText } from "../util.js";
+import { applyEntities, commands, createKeyboard, formatText, logNotMsg, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
 
 const channelCommands = () => {
@@ -124,13 +124,12 @@ const channelCommands = () => {
 const addChannel = () => {
     return async(ctx, next) => {
         const { message, exist_error, success, cancel, permision_error, notfound_error, buttons, error_buttons } = commands["toadd"]
-        const bot = ctx.botInfo
-        const username = bot.username
-            
+                
+        
         // ### ADD CHANNEL FOR BOT JOIN
         if(ctx.update.my_chat_member && ctx.update.my_chat_member.new_chat_member){
-            
             const bot = ctx.botInfo
+
             const { chat, new_chat_member, old_chat_member, from } = ctx.update.my_chat_member
             
             if(!from.is_bot) {
@@ -189,6 +188,8 @@ const addChannel = () => {
 
         // ### ADD CHANNEL FOR MESSAGE FORWARDING
         if(ctx.message && ctx.message.forward_origin) {
+            const bot = ctx.botInfo
+            const {username} = bot
             const { message_id, from } = ctx.message
 
             try {
@@ -262,7 +263,7 @@ const addChannel = () => {
                 const params = {
                     firstName: from.first_name,
                 }
-                
+
                 return ctx.reply(formatText(notfound_error, params), {
                     reply_to_message_id: message_id,
                     parse_mode: "HTML",
@@ -272,7 +273,9 @@ const addChannel = () => {
             
         }
         
+        // ### CONFIRM ADD CHANNEL
         if(ctx.callbackQuery) {
+            const bot = ctx.botInfo
             const data = ctx.callbackQuery.data.split(":")
 
             if(data[0] === "add.yes") {
@@ -293,13 +296,19 @@ const addChannel = () => {
                     ownerId: user.id,
                     channelId: channel.id,
                     title: channel.title,
-                    inviteUrl: channel.invite_link
+                    inviteUrl: channel.invite_link,
+                    caption: `   
+  
+ㅤ  -\` bʏㅤ ${channel.title}ㅤ.ᐟㅤloveㅤısㅤαrtㅤ𔘓 <a href='t.me/${bot.username}'>t.me/legendas</a> ˳ 🍒  
+  ㅤ
+`
                 }
 
-                const save = saveChannelService(payload) 
+                const save = await saveChannelService(payload)
 
                 if(save) {
                     await deleteCache(data[1])
+                    
 
                     const channelBtn = [
                         { text: "Configure Agora", webApp: `${process.env.WEBAPP_URL}/${save.ownerId}/${save.channelId}` }
@@ -353,4 +362,159 @@ const addChannel = () => {
     }
 }
 
-export { channelCommands, addChannel }
+const editCaption = () => {
+
+    return async(ctx, next) => {
+        
+        if(ctx.channelPost) {
+            const { chat, message_id } = ctx.channelPost
+            const channelId = chat.id
+
+            const channel = await getChannelByChannelID(BigInt(channelId))
+            if(!channel) return;
+
+            const buttons = channel.buttons.map(btn => ({
+                text: btn.text,
+                url: btn.url
+            }))
+
+
+            // ### Edit Message Applied Caption
+            if(ctx.channelPost.text && channel.settings.message) {
+                try {
+
+                    const {text, entities } = ctx.channelPost
+                    const newCaption = applyEntities(`${text}${channel.caption}`, entities)
+                    
+                    const edit = await ctx.editMessageText(newCaption, {
+                        parse_mode: "HTML",
+                        ...createKeyboard(buttons, 1)
+                    })
+
+                    if(edit) {
+                        console.log(`text edited - (${channelId} - ${chat.title})`)
+                    }
+                } catch (error) {
+                    console.log(error);
+                    return await logNotMsg(ctx, "Mensagem")
+                }
+            }
+
+            // ### Edit Audio Applied Caption
+            if(ctx.channelPost.audio && channel.settings.audio) {
+                try {
+                    await sleep(500);
+
+                    const edit = await ctx.telegram.editMessageCaption(channelId, message_id, null, formatText(channel.caption), {
+                        parse_mode: "HTML",
+                        ...createKeyboard(buttons, 1)
+                    })
+
+                    if(edit) {
+                        console.log(`audio edited - (${channelId} - ${chat.title})`)
+                    }
+                } catch (error) {
+                    console.log(error);
+                    return await logNotMsg(ctx, "Audio")
+                }
+            }
+
+            // ### Edit Sticker Applied Caption
+            if(ctx.channelPost.sticker && channel.settings.sticker) {
+                try {
+                    const userButton = channel.buttons.map(btn=> [{
+                        text: btn.text,
+                        url: btn.url
+                    }])
+
+                    const edit = await ctx.editMessageReplyMarkup({
+                        inline_keyboard: userButton
+                    })
+
+                    if(edit) {
+                        console.log(`sticker edited - (${channelId} - ${chat.title})`)
+                    }
+                } catch (error) {
+                    console.log(error);
+                    return await logNotMsg(ctx, "Sticker")
+                }
+            }            
+
+            // ### Edit Video Applied Caption
+            if(ctx.channelPost.video && channel.settings.video) {
+                try {
+
+                    var { caption, caption_entities } = ctx.channelPost
+                    if(caption === undefined) {
+                        caption = ""
+                    }
+
+                    const newCaption = applyEntities(`${caption}${channel.caption}`, caption_entities)
+                    
+                    const edit = await ctx.editMessageCaption(newCaption, {
+                        parse_mode: "HTML",
+                        ...createKeyboard(buttons, 1)
+                    })
+
+                    if(edit) {
+                        console.log(`video edited - (${channelId} - ${chat.title})`)
+                    }
+                } catch (error) {
+                    console.log(error);
+                    return await logNotMsg(ctx, "Video")
+                }
+            }
+
+            // ### Edit Photo Applied Caption
+            if(ctx.channelPost.photo && channel.settings.photo) {
+                try {
+
+                    var { caption, caption_entities } = ctx.channelPost
+                    if(caption === undefined) {
+                        caption = ""
+                    }
+
+                    const newCaption = applyEntities(`${caption}${channel.caption}`, caption_entities)
+                    
+                    const edit = await ctx.editMessageCaption(newCaption, {
+                        parse_mode: "HTML",
+                        ...createKeyboard(buttons, 1)
+                    })
+
+                    if(edit) {
+                        console.log(`photo edited - (${channelId} - ${chat.title})`)
+                    }
+                } catch (error) {
+                    console.log(error);
+                    return await logNotMsg(ctx, "Imagem")
+                }
+            }
+
+            // ### Edit Gif Applied Caption
+            if(ctx.channelPost.animation && channel.settings.gif) {
+                try {
+                    await sleep(500);
+                    const edit = await ctx.editMessageCaption(channel.caption, {
+                        parse_mode: "HTML",
+                        ...createKeyboard(buttons, 1)
+                    })
+
+                    if(edit) {
+                        console.log(`animation edited - (${channelId} - ${chat.title})`)
+                    }
+                } catch (error) {
+                    console.log(error);
+                    return await logNotMsg(ctx, "Animation")
+                }
+            }
+
+            
+        }
+
+
+        next()
+    }
+
+}
+
+export { channelCommands, addChannel, editCaption }

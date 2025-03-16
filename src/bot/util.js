@@ -2,6 +2,7 @@
 import fs from "fs";
 import yaml from "js-yaml";
 import { Markup } from "telegraf";
+import { getChannelByChannelID } from "./sevices/channelService.js";
 
 const commands = yaml.load(fs.readFileSync('./src/bot/commands.yml', 'utf-8')).commands;
 
@@ -56,5 +57,62 @@ const randomId = (tamanho) => {
   return resultado;
 }
 
+const applyEntities = (text, entities = []) => {
+  let openTags = {};
+  let closeTags = {};
+  
+  const tagMap = {
+      bold: 'b',
+      blockquote: 'blockquote',
+      italic: 'i',
+      underline: 'u',
+      strikethrough: 's',
+      code: 'code',
+      spoiler: 'tg-spoiler'
+  };
 
-export { commands, cleanCommand, formatText, createKeyboard, formatDate, randomId }
+  entities.forEach(({ offset, length, type }) => {
+      let tag = tagMap[type];
+      if (!tag) return;
+
+      if (!openTags[offset]) openTags[offset] = [];
+      if (!closeTags[offset + length]) closeTags[offset + length] = [];
+
+      openTags[offset].push(`<${tag}>`);
+      closeTags[offset + length].unshift(`</${tag}>`);  
+  });
+
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+      if (openTags[i]) result += openTags[i].join('');
+      result += text[i];
+      if (closeTags[i + 1]) result += closeTags[i + 1].join('');
+  }
+
+  return result;
+};
+
+const sleep = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+const logNotMsg = async (ctx, type) => {
+  const { chat, message_id } = ctx.channelPost
+  const bot = ctx.botInfo
+  const getChannel = await getChannelByChannelID(BigInt(chat.id))
+  
+  const channelIdMerge = String(chat.id).split("-100")
+  const messageLink = `https://t.me/c/${channelIdMerge[1]}/${message_id}`
+
+  return ctx.telegram.sendMessage(Number(getChannel.ownerId), `<b>⚠ <a href='${messageLink}'>${type}</a> • Não foi possivel editar</b>`, {
+    parse_mode: "HTML"
+  })
+
+
+  //   const bot = ctx.botInfo
+//   return ctx.telegram.sendMessage(Number(chatId), `<b>⚠ <a href='tg://user?id=${bot.id}'>Atencão</a> • Não foi possivel editar o <a href='${messageLink}'>Audio</a></b>`, {
+//     parse_mode: "HTML"
+// }) 
+}
+
+export { commands, cleanCommand, formatText, createKeyboard, formatDate, randomId, applyEntities, sleep, logNotMsg }

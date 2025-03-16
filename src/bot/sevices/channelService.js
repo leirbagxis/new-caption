@@ -52,13 +52,14 @@ const deleteChannelById = async (ownerId, channelId) => {
 const saveChannelService = async (channel) => {
     
     try {
-        const { ownerId, channelId, title, inviteUrl } = channel
+        const { ownerId, channelId, title, inviteUrl, caption } = channel
     
         const save = await connection.channel.create({
             data: {
                 ownerId,
                 channelId,
                 title,
+                caption,
                 settings: {
                     message: true,
                     sticker: true,
@@ -74,7 +75,10 @@ const saveChannelService = async (channel) => {
                     }
                 }
             }
-        })
+        })        
+
+        if(!save) return false;
+
         console.log("canal salvo com sucesso: " + channelId);
         return save
 
