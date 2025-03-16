@@ -32,6 +32,13 @@ commands:
     buttons:
       - text: "⬅️ Voltar"
         callback_data: "profile.user.channels"
+    channel_buttons:
+      - text: "Configure Agora"
+        webApp: "{webAppUrl}/{userId}/{channelId}"
+      - text: "Deletar Canal"
+        callback_data: "del_{channelId}"
+      - text: "Recarregar Dados"
+        callback_data: "rr_{channelId}"
 
   help:
     message: "<b>🆘 Guia Rápido para Configuração</b>\n\n💡 Ativar as <b>Legendas Automáticas</b> no seu canal é simples:\n\n1️⃣ <b>Adicione o bot</b> {botUsername} ao seu canal.\n2️⃣ Conceda as seguintes permissões:\n   ✔️ Editar mensagens\n   ✔️ Fixar mensagens\n   ✔️ Publicar postagens\n   ✔️ Convidar usuários via link\n\n<blockquote><b>📌 Após isso, o bot enviará uma confirmação para você, é só confimar e o bot será ativado e pré configurado automaticamente.</b></blockquote>\n\n<b>Caso não funcione, encaminhe qualquer mensagem do seu canal mencionando o nome do canal para ativá-lo manualmente.</b>"

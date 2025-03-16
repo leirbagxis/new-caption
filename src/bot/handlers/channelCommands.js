@@ -1,6 +1,6 @@
 import { deleteChannelById, getChannelByChannelID, saveChannelService, updateChannelService } from "../sevices/channelService.js";
 import { getUserById, saveUser } from "../sevices/userService.js"
-import { applyEntities, commands, createKeyboard, formatText, logNotMsg, sleep } from "../util.js";
+import { applyEntities, commands, createKeyboard, formatButtons, formatText, logNotMsg, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
 
 const channelCommands = () => {
@@ -50,26 +50,24 @@ const channelCommands = () => {
                 // # Cancelar acao de excluir o canal do bot
                 if(data.startsWith('can_')) {
                     await ctx.answerCbQuery("Operacao cancelada!..")
-                    const { message, buttons } = commands["profile.user.channels.mychannel"];
+                    const { message, buttons, channel_buttons } = commands["profile.user.channels.mychannel"];
                     const channelId = data.split("_")
                     const channelInfo = userInfo.channel.find(channel => channel.channelId === BigInt(channelId[1]))
                                         
                     params["channelName"] = channelInfo.title
                     params["channelId"] = channelId[1]
-                    
-                    const configureChannelWeb = [{
-                        text: "Configure Agora",
-                        webApp: `${process.env.WEBAPP_URL}/${user.id}/${channelId[1]}`
-                    }]
 
-                    const deleteChannelButton = [{
-                        text: "Deletar Canal",
-                        callback_data: "del_" + channelId[1]
-                    }]
+                    const paramsB = {
+                        webAppUrl: process.env.WEBAPP_URL,
+                        userId: user.id,
+                        channelId: channelId[1]
+                    }                    
+
+                    const repackButtons = formatButtons(channel_buttons, paramsB)
 
                     return ctx.editMessageText(formatText(message, params), {
                         parse_mode: "HTML",
-                        ...createKeyboard([...configureChannelWeb, ...deleteChannelButton, ...buttons], 1)
+                        ...createKeyboard([...repackButtons, ...buttons], 1)
                     })
                 }
 

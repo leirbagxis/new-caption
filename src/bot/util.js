@@ -18,6 +18,30 @@ const formatText = (text, params = {}) => {
   return text.replace(/{(\w+)}/g, (_,key) => params[key] || `${key}`)
 }
 
+const formatButtons = (yamlObj, params = {}) => {
+  if (!params.webAppUrl) {
+    params.webAppUrl = process.env.WEBAPP_URL
+  }
+
+  const formatValue = (value) => {
+    if (typeof value === "string") {
+      return value.replace(/{([\w.]+)}/g, (_, key) => {
+        const keys = key.split(".");
+        return keys.reduce((acc, curr) => acc && acc[curr], params) || `{${key}}`;
+      });
+    } else if (Array.isArray(value)) {
+      return value.map(formatValue);
+    } else if (typeof value === "object" && value !== null) {
+      return Object.fromEntries(
+        Object.entries(value).map(([k, v]) => [k, formatValue(v)])
+      );
+    }
+    return value;
+  };
+
+  return formatValue(yamlObj);
+};
+
 const createKeyboard = (dynamicButtons = [], columns = 2) => {
   const buttons = [
     ...dynamicButtons.map(btn => {
@@ -110,4 +134,4 @@ const logNotMsg = async (ctx, type) => {
   
 }
 
-export { commands, cleanCommand, formatText, createKeyboard, formatDate, randomId, applyEntities, sleep, logNotMsg }
+export { commands, cleanCommand, formatText, createKeyboard, formatDate, randomId, applyEntities, sleep, logNotMsg, formatButtons }

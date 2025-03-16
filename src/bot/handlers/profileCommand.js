@@ -1,5 +1,5 @@
 import { getUserById, saveUser } from "../sevices/userService.js"
-import { cleanCommand, commands, createKeyboard, formatDate, formatText } from "../util.js";
+import { cleanCommand, commands, createKeyboard, formatButtons, formatDate, formatText } from "../util.js";
 
 const profileCommand = () => {
     return async(ctx, next) => {
@@ -50,7 +50,7 @@ const profileCommand = () => {
                 }
 
                 if(data.startsWith('cf_')) {
-                    const { message, buttons } = commands["profile.user.channels.mychannel"];
+                    const { message, buttons, channel_buttons } = commands["profile.user.channels.mychannel"];
                     const channelId = data.split("_")
                     const channelInfo = userInfo.channel.find(channel => channel.channelId === BigInt(channelId[1]))
                                         
@@ -62,17 +62,13 @@ const profileCommand = () => {
                         webApp: `${process.env.WEBAPP_URL}/${user.id}/${channelId[1]}`
                     }]
 
-                    const deleteChannelButton = [{
-                        text: "Deletar Canal",
-                        callback_data: "del_" + channelId[1]
-                    }]
+                    const paramsB = {
+                        webAppUrl: process.env.WEBAPP_URL,
+                        userId: user.id,
+                        channelId: channelId[1]
+                    }                    
 
-                    const reloadChannelButton = [{
-                        text: "Recarregar Dados",
-                        callback_data: "rr_" + channelId[1]
-                    }]
-
-                    const repackButtons = [...configureChannelWeb, ...deleteChannelButton, ...reloadChannelButton]
+                    const repackButtons = formatButtons(channel_buttons, paramsB)
 
                     return ctx.editMessageText(formatText(message, params), {
                         parse_mode: "HTML",
