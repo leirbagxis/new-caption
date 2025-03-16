@@ -1,4 +1,4 @@
-import { deleteChannelById, getChannelByChannelID, saveChannelService } from "../sevices/channelService.js";
+import { deleteChannelById, getChannelByChannelID, saveChannelService, updateChannelService } from "../sevices/channelService.js";
 import { getUserById, saveUser } from "../sevices/userService.js"
 import { applyEntities, commands, createKeyboard, formatText, logNotMsg, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
@@ -370,8 +370,15 @@ const editCaption = () => {
             const { chat, message_id } = ctx.channelPost
             const channelId = chat.id
 
+            const updatePayload = {
+                channelId: chat.id,
+                title: chat.title
+            }
+            await updateChannelService(updatePayload)
+
             const channel = await getChannelByChannelID(BigInt(channelId))
             if(!channel) return;
+            
 
             const buttons = channel.buttons.map(btn => ({
                 text: btn.text,
@@ -516,5 +523,6 @@ const editCaption = () => {
     }
 
 }
+
 
 export { channelCommands, addChannel, editCaption }

@@ -98,23 +98,24 @@ const updateChannelService = async (payload) => {
             where: {
                 channelId
             }
-        })
+        })       
+        
 
         if (firstButton) {
             const update = await connection.channel.update({
                 where: {
-                    ownerId
+                    channelId
                 },
                 data: {
                     title,
                     buttons: {
                         update: {
                             where: {
-                                id: firstButton.buttonId
+                                buttonId: firstButton.buttonId
                             },
                             data: {
                                 text: title,
-                                url: inviteUrl
+                                url: inviteUrl || firstButton.url
                             }
                         }
                     }
