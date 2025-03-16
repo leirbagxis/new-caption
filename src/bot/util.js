@@ -107,12 +107,7 @@ const logNotMsg = async (ctx, type) => {
   return ctx.telegram.sendMessage(Number(getChannel.ownerId), `<b>⚠ <a href='${messageLink}'>${type}</a> • Não foi possivel editar</b>`, {
     parse_mode: "HTML"
   })
-
-
-  //   const bot = ctx.botInfo
-//   return ctx.telegram.sendMessage(Number(chatId), `<b>⚠ <a href='tg://user?id=${bot.id}'>Atencão</a> • Não foi possivel editar o <a href='${messageLink}'>Audio</a></b>`, {
-//     parse_mode: "HTML"
-// }) 
+  
 }
 
 export { commands, cleanCommand, formatText, createKeyboard, formatDate, randomId, applyEntities, sleep, logNotMsg }

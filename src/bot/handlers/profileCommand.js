@@ -67,9 +67,16 @@ const profileCommand = () => {
                         callback_data: "del_" + channelId[1]
                     }]
 
+                    const reloadChannelButton = [{
+                        text: "Recarregar Dados",
+                        callback_data: "rr_" + channelId[1]
+                    }]
+
+                    const repackButtons = [...configureChannelWeb, ...deleteChannelButton, ...reloadChannelButton]
+
                     return ctx.editMessageText(formatText(message, params), {
                         parse_mode: "HTML",
-                        ...createKeyboard([...configureChannelWeb, ...deleteChannelButton, ...buttons], 1)
+                        ...createKeyboard([...repackButtons, ...buttons], 1)
                     })
                 }
             }

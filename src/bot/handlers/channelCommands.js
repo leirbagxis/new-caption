@@ -18,7 +18,7 @@ const channelCommands = () => {
                 const save = await saveUser(params)
                 const { data } = ctx.callbackQuery
                 
-                const userInfo = await getUserById(user.id)       
+                const userInfo = await getUserById(user.id)                       
                 
                 // # Confirmacao para excluir o canal do bot
                 if(data.startsWith('del_')) {
@@ -102,6 +102,43 @@ const channelCommands = () => {
                             ...createKeyboard(finalButtons)
                         })                        
                     }                   
+
+                }
+
+                // # Recarregar dados e salvar mudancas de um canal
+                if(data.startsWith('rr_')) {
+                    const { message, reconfigure_message, reconfigure_failure, buttons } =  commands["profile.user.channels.mychannel"];
+                    const channelId = data.split("_")
+                    const getTgInfoChannel = await ctx.telegram.getChat(channelId[1])                    console.log(getTgInfoChannel);
+
+                    const reloadConfig = await updateChannelService({
+                        channelId: getTgInfoChannel.id,
+                        title: getTgInfoChannel.title,
+                        inviteUrl: getTgInfoChannel.invite_link
+                    })
+
+                    const button = [
+                        {
+                            text: "⬅️ Voltar",
+                            callback_data: "cf_" + channelId[1]
+                        },
+                        {
+                            text: "📝 Meus Canais",
+                            callback_data: "profile.user.channels"
+                        }
+                    ] 
+
+                    if(!reloadConfig) {
+                        return ctx.editMessageText(reconfigure_failure, {
+                            parse_mode: "HTML",
+                            ...createKeyboard(button)
+                        })
+                    }
+
+                    return ctx.editMessageText(reconfigure_message, {
+                        parse_mode: "HTML",
+                            ...createKeyboard(button)
+                    })                        
 
                 }
 
