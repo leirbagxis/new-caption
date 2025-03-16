@@ -29,14 +29,13 @@ const deleteChannelById = async (ownerId, channelId) => {
     const verify = await getChannelbyId(ownerId,  channelId)
 
     if(verify) {
-        //return verify
-        
         await connection.buttons.deleteMany({
             where: {
                 channelId
             }
         })
 
+        console.log(`Channel deleted succefully - (${verify.channelId} - ${verify.title})`);        
         return await connection.channel.delete({
             where: {
                 ownerId,

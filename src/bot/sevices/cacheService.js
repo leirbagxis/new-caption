@@ -8,7 +8,8 @@ const createCache = async (payload) => {
     const save = await redisCache.set(key, payload, "EX", 86400);
 
     if(save === "OK") {
-        return await redisCache.get(key)
+        const getCache = await redisCache.get(key)
+        return JSON.parse(getCache)
     }
 }
 
