@@ -132,4 +132,31 @@ const updateChannelService = async (payload) => {
 
 }
 
-export { getChannelbyId, getChannelByChannelID, deleteChannelById, saveChannelService, updateChannelService }
+const updateOwnerChannelService = async (channelId, newOwnerId) => {
+    const getChannel = await getChannelByChannelID(channelId)
+
+    if (getChannel) {
+        const update = await connection.channel.update({
+            where: {
+                channelId
+            },
+            data: {
+                ownerId: newOwnerId
+            },
+            include: {
+                owner: true
+            }
+        })
+        if(update) {
+            console.log("mudanca de owner no canal " + channelId);
+            
+            return update
+        }
+
+        return false
+    }
+
+    return false
+}
+
+export { getChannelbyId, getChannelByChannelID, deleteChannelById, saveChannelService, updateChannelService, updateOwnerChannelService }

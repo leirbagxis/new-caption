@@ -16,6 +16,8 @@ commands:
         callback_data: "profile.user.channels"
       - text: "🏠 Início"
         callback_data: "start"
+      - text: "🔒 Assumir Controle"
+        switch_inline_query: "Claim "
   
   profile.user.channels:
     message: "<b>🏷️ Canais Vinculados</b>\n\n<blockquote>📌 Estes são os canais onde o bot está configurado para adicionar legendas automaticamente às postagens.</blockquote>\n\n<b>🔄 Se o bot for removido de um canal, ele deixará de aplicar as legendas e será removido automaticamente.</b>"
@@ -35,10 +37,20 @@ commands:
     channel_buttons:
       - text: "Configure Agora"
         webApp: "{webAppUrl}/{userId}/{channelId}"
-      - text: "Deletar Canal"
-        callback_data: "del_{channelId}"
       - text: "Recarregar Dados"
         callback_data: "rr_{channelId}"
+      - text: "Deletar Canal"
+        callback_data: "del_{channelId}"
+
+  profile.user.channels.claim_ownership:
+    message: "<b>🔑 Assumir Controle do Canal</b>\n\n<blockquote>📌 Canal: <i>{channelName}</i>\n🔗 ID do Canal: <code>{channelId}</code>\n👤 Cadastrado por: <i>{creatorName}\n         - ID: {creatorId})</i></blockquote>\n\n<b>🔹 Se você for o administrador principal deste canal e deseja assumir o controle, clique em 'Assumir Controle'. Após a confirmação, você será o único responsável pelas configurações do bot neste canal.</b>"
+    success_message: "<b>✅ Sucesso!</b>\n\n<blockquote>Agora você é o novo administrador do canal <i>{channelName}</i> (ID: <code>{channelId}</code>)! Todos os controles e configurações do bot estão sob sua responsabilidade.</blockquote>\n\n<b>🔹 Lembre-se de ajustar as configurações de legenda conforme necessário!</b>"
+    cancel_message: "<b>❌ Operação Cancelada</b>\n\nA mudança de proprietário do canal <i>{channelName}</i> (ID: <code>{channelId}</code>) foi cancelada. Nenhuma alteração foi feita."
+    buttons:
+      - text: "📝 Meus Canais"
+        callback_data: "profile.user.channels"
+      - text: "🏠 Início"
+        callback_data: "start"
 
   help:
     message: "<b>🆘 Guia Rápido para Configuração</b>\n\n💡 Ativar as <b>Legendas Automáticas</b> no seu canal é simples:\n\n1️⃣ <b>Adicione o bot</b> {botUsername} ao seu canal.\n2️⃣ Conceda as seguintes permissões:\n   ✔️ Editar mensagens\n   ✔️ Fixar mensagens\n   ✔️ Publicar postagens\n   ✔️ Convidar usuários via link\n\n<blockquote><b>📌 Após isso, o bot enviará uma confirmação para você, é só confimar e o bot será ativado e pré configurado automaticamente.</b></blockquote>\n\n<b>Caso não funcione, encaminhe qualquer mensagem do seu canal mencionando o nome do canal para ativá-lo manualmente.</b>"

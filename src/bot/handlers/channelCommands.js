@@ -1,6 +1,6 @@
-import { deleteChannelById, getChannelByChannelID, saveChannelService, updateChannelService } from "../sevices/channelService.js";
+import { deleteChannelById, getChannelByChannelID, saveChannelService, updateChannelService, updateOwnerChannelService } from "../sevices/channelService.js";
 import { getUserById, saveUser } from "../sevices/userService.js"
-import { applyEntities, commands, createKeyboard, formatButtons, formatText, logNotMsg, sleep } from "../util.js";
+import { applyEntities, commands, createKeyboard, formatButtons, formatText, logNotMsg, randomId, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
 
 const channelCommands = () => {
@@ -10,7 +10,7 @@ const channelCommands = () => {
             
             // Edit Messages Commands
             if(ctx.callbackQuery) {
-                const user = await ctx.getChat()                
+                const user = await ctx.from;                
                 const params = {
                     userId: user.id,
                     firstName: user.first_name
@@ -324,7 +324,7 @@ const addChannel = () => {
                     })
                 }
                 
-                const user = await ctx.getChat()
+                const user = await ctx.from;
                 const channel = await ctx.telegram.getChat(getSession.channelId)
 
                 const payload = {
@@ -402,6 +402,7 @@ const editCaption = () => {
     return async(ctx, next) => {
         
         if(ctx.channelPost) {
+
             const { chat, message_id } = ctx.channelPost
             const channelId = chat.id
 
@@ -559,5 +560,205 @@ const editCaption = () => {
 
 }
 
+const generateNumericId = (userId) => {
+    return `${userId}${Date.now().toString().slice(-6)}`;
+};
 
-export { channelCommands, addChannel, editCaption }
+const claimOwnerShip = () => {
+    return async (ctx, next) => {
+
+        // ### Funcao para confirmar/cancelar acao de assumir controle
+        if(ctx.callbackQuery) {
+
+            const { data } = ctx.callbackQuery
+
+            // ### Aceitar confirmacao de mudanca de owner
+            if(data.startsWith("accept_claim")) {
+                const { success_message, buttons } = commands["profile.user.channels.claim_ownership"]
+                const fields = data.split(":")
+                
+                const updateOwner = await updateOwnerChannelService(fields[1], fields[2])
+
+                if(updateOwner){
+                    const params = {
+                        channelName: updateOwner.title,
+                        channelId: updateOwner.channelId
+                    }
+
+                    return await ctx.editMessageText(formatText(success_message, params), {
+                        parse_mode: "HTML",
+                        ...createKeyboard(buttons)
+                    })
+                }
+            }
+
+            if(data.startsWith("cancel_claim")) {
+                const { cancel_message, buttons } = commands["profile.user.channels.claim_ownership"]
+                const fields = data.split(":")
+                
+                const getChannel = await getChannelByChannelID(fields[1])
+
+                if(getChannel){
+                    const params = {
+                        channelName: getChannel.title,
+                        channelId: getChannel.channelId
+                    }
+
+                    return await ctx.editMessageText(formatText(cancel_message, params), {
+                        parse_mode: "HTML",
+                        ...createKeyboard(buttons)
+                    })
+                }
+            }
+
+            return next()
+        }
+
+
+        // ### Funcao Assumir controle
+        
+        if (!ctx.inlineQuery) return next();
+
+        const { from, query } = ctx.inlineQuery;
+        const cmd = query.split(" ");
+
+        try {
+            if (cmd[0] === "Claim") {
+                const chatId = cmd[1];
+                const { message, buttons } = commands["profile.user.channels.claim_ownership"]
+
+                if (!chatId || isNaN(Number(chatId))) {
+                    return await ctx.answerInlineQuery([
+                        {
+                            type: "article",
+                            id: generateNumericId(from.id),
+                            title: "🔎 ID Inválido",
+                            input_message_content: {
+                                message_text: "⚠️ O ID deve ser um número válido.",
+                            },
+                        },
+                    ], { cache_time: 0 });
+                }
+
+                let channelInDb
+                try {
+
+                    channelInDb = await getChannelByChannelID(chatId)
+
+                    if(channelInDb) {
+                        if(Number(channelInDb.ownerId) === from.id) {
+                            return await ctx.answerInlineQuery([
+                                {
+                                    type: "article",
+                                    id: generateNumericId(from.id),
+                                    title: "⚠️ Canal já reivindicado",
+                                    input_message_content: {
+                                        message_text: `Este canal já está vinculado à você.`,
+                                        parse_mode: "HTML"
+                                    },
+                                    ...createKeyboard(buttons)
+                                },
+                            ], { cache_time: 0 });
+                        }
+                    }
+                    
+                    
+                } catch (error) {
+                    console.error("❌ ERRO DB:", error);
+                    return await ctx.answerInlineQuery([
+                        {
+                            type: "article",
+                            id: generateNumericId(from.id),
+                            title: "❌ Erro ao verificar banco de dados",
+                            input_message_content: {
+                                message_text: "Ocorreu um erro ao verificar o banco de dados.",
+                                parse_mode: "HTML"
+                            },
+                        },
+                    ], { cache_time: 0 });
+                }
+
+                let checkAdmin;
+                try {
+                    checkAdmin = await ctx.telegram.getChatAdministrators(chatId);
+                } catch (err) {
+                    return await ctx.answerInlineQuery([
+                        {
+                            type: "article",
+                            id: generateNumericId(from.id),
+                            title: "⚠️ Erro ao acessar canal",
+                            input_message_content: {
+                                message_text: "🚫 O bot pode não estar no canal ou o ID está errado.",
+                            },
+                        },
+                    ], { cache_time: 0 });
+                }
+
+                const ownerChannel = checkAdmin.find(user => user.status === "creator" && user.user.id === from.id);
+
+                if (!ownerChannel) {
+                    return await ctx.answerInlineQuery([
+                        {
+                            type: "article",
+                            id: generateNumericId(from.id),
+                            title: "🚫 Sem Permissão",
+                            input_message_content: {
+                                message_text: `⚠️ Você não é o criador/dono deste canal (${chatId}).`,
+                            },
+                        },
+                    ], { cache_time: 0 });
+                }
+                
+                const userGetInfo = await getUserById(channelInDb.ownerId)
+                
+                
+                const params = {
+                    channelName: channelInDb.title,
+                    creatorName: userGetInfo.firstName || "n/a",
+                    channelId: channelInDb.channelId,
+                    creatorId: channelInDb.ownerId
+                }
+
+                return await ctx.answerInlineQuery([
+                    {
+                        type: "article",
+                        id: generateNumericId(from.id),
+                        title: "✅ Canal Encontrado",
+                        description: `Canal ${chatId} - Confirme a propriedade`,
+                        input_message_content: {
+                            message_text: formatText(message, params),
+                            parse_mode: "HTML"
+                        },
+                        reply_markup: {
+                            inline_keyboard: [
+                                [
+                                    { text: "✅ Aceitar", callback_data: `accept_claim:${chatId}:${from.id}` },
+                                    { text: "❌ Cancelar", callback_data: `cancel_claim:${chatId}:${from.id}` }
+                                ]
+                            ]
+                        },
+                    },
+                ], {
+                    cache_time: 0,
+                    switch_pm_parameter: `claim_success_${chatId}_${from.id}`
+                });
+            }
+            
+            return next();
+        } catch (error) {
+            console.error("❌ ERRO:", error);
+            return await ctx.answerInlineQuery([
+                {
+                    type: "article",
+                    id: generateNumericId(from.id),
+                    title: "❌ Erro no processamento",
+                    input_message_content: {
+                        message_text: "Ocorreu um erro ao processar sua solicitação.",
+                    },
+                },
+            ], { cache_time: 0 });
+        }
+    };
+};
+
+export { channelCommands, addChannel, editCaption, claimOwnerShip }

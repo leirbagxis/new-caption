@@ -3,6 +3,7 @@ import fs from "fs";
 import yaml from "js-yaml";
 import { Markup } from "telegraf";
 import { getChannelByChannelID } from "./sevices/channelService.js";
+import { forceReply } from "telegraf/markup";
 
 const commands = yaml.load(fs.readFileSync('./src/bot/commands.yml', 'utf-8')).commands;
 
@@ -48,6 +49,8 @@ const createKeyboard = (dynamicButtons = [], columns = 2) => {
       if (btn.webApp) return Markup.button.webApp(btn.text, btn.webApp);
       if (btn.url) return Markup.button.url(btn.text, btn.url);
       if (btn.callback_data) return Markup.button.callback(btn.text, btn.callback_data);
+      if (btn.switch_inline_query) return Markup.button.switchToCurrentChat(btn.text, btn.switch_inline_query)
+      if (btn.force_reply) return Markup.button.callback(btn.text, 'ownership' )
       return null;
     }).filter(Boolean),
   ]

@@ -8,7 +8,7 @@ const profileCommand = () => {
             
             // Edit Messages Commands profile
             if(ctx.callbackQuery) {
-                const user = await ctx.getChat()
+                const user = await ctx.from;
                 const params = {
                     userId: user.id,
                     firstName: user.first_name
@@ -56,11 +56,6 @@ const profileCommand = () => {
                                         
                     params["channelName"] = channelInfo.title
                     params["channelId"] = channelId[1]
-                    
-                    const configureChannelWeb = [{
-                        text: "Configure Agora",
-                        webApp: `${process.env.WEBAPP_URL}/${user.id}/${channelId[1]}`
-                    }]
 
                     const paramsB = {
                         webAppUrl: process.env.WEBAPP_URL,
