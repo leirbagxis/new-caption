@@ -24,11 +24,12 @@ model User {
 model Channel {
   channelId BigInt @unique
   title String
-  caption  String    @default("<b>👑 - </b> @LegendaBrBot")
+  caption  String
   settings Json
   ownerId BigInt
   owner User @relation(fields: [ownerId], references: [userId])
   buttons Buttons[]
+  createAt DateTime @default(now())
 }
 
 model Buttons {

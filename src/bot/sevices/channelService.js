@@ -8,7 +8,7 @@ const getChannelbyId = async (ownerId, channelId) => {
         },
         include: {
             buttons: true
-        }
+        },
     })
 }
 
@@ -17,6 +17,7 @@ const getChannelByChannelID = async (channelId) => {
         where: {
             channelId
         },
+        orderBy: { createdAt: 'desc' },
         include: {
             buttons: true
         }
