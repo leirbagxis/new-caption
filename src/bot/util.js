@@ -137,4 +137,8 @@ const logNotMsg = async (ctx, type) => {
   
 }
 
-export { commands, cleanCommand, formatText, createKeyboard, formatDate, randomId, applyEntities, sleep, logNotMsg, formatButtons }
+const generateNumericId = (userId) => {
+  return `${userId}${Date.now().toString().slice(-6)}`;
+};
+
+export { commands, cleanCommand, formatText, createKeyboard, formatDate, randomId, applyEntities, sleep, logNotMsg, formatButtons, generateNumericId }

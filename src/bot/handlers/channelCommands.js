@@ -1,6 +1,6 @@
 import { deleteChannelById, getChannelByChannelID, saveChannelService, updateChannelService, updateOwnerChannelService } from "../sevices/channelService.js";
 import { getUserById, saveUser } from "../sevices/userService.js"
-import { applyEntities, commands, createKeyboard, formatButtons, formatText, logNotMsg, randomId, sleep } from "../util.js";
+import { applyEntities, commands, createKeyboard, formatButtons, formatText, generateNumericId, logNotMsg, randomId, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
 
 const channelCommands = () => {
@@ -560,10 +560,6 @@ const editCaption = () => {
 
 }
 
-const generateNumericId = (userId) => {
-    return `${userId}${Date.now().toString().slice(-6)}`;
-};
-
 const claimOwnerShip = () => {
     return async (ctx, next) => {
 
@@ -760,5 +756,6 @@ const claimOwnerShip = () => {
         }
     };
 };
+
 
 export { channelCommands, addChannel, editCaption, claimOwnerShip }
