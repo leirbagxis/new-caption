@@ -8,7 +8,9 @@ const getUserById = async (userId) => {
         include: {
             channel: {
                 include: {
-                    buttons: true
+                    buttons: {
+                        orderBy: { createAt: 'asc' }
+                    }
                 },
                 orderBy: { createAt: 'asc' }
             }

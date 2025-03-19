@@ -35,11 +35,13 @@ commands:
       - text: "⬅️ Voltar"
         callback_data: "profile.user.channels"
     channel_buttons:
-      - text: "Configure Agora"
+      - text: "⚙️ Configure Agora"
         webApp: "{webAppUrl}/{userId}/{channelId}"
-      - text: "Recarregar Dados"
+      - text: "🔑 Transferir Acesso"
+        callback_data: "paccess"
+      - text: "🔄 Recarregar Dados"
         callback_data: "rr_{channelId}"
-      - text: "Deletar Canal"
+      - text: "🗑️ Deletar Canal"
         callback_data: "del_{channelId}"
 
   profile.user.channels.claim_ownership:

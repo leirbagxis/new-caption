@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import apiRouter from "./router.js"
 
 const startMiniApp = async () => {
     const server = Fastify()
@@ -11,24 +12,28 @@ const startMiniApp = async () => {
 
     server.register(import('@fastify/static'), {
         root: path.join(__dirname, 'public'),
-        prefix: '/', 
+        prefix: '/public', 
     });
 
+    
     server.register(fastifyCors, {
         origin: "*"
     })
-
-    server.get('/', async (request, reply) => {
+    
+    // exite html para usuario especifico
+    server.get('/:userId/:channelID', async (request, reply) => {
         return reply.sendFile('index.html');
     });
-
+    
+    server.register(apiRouter, { prefix: "/api" })
+    
     server.get('/api', (request, reply) => {
         reply.send({ hello: 'world' })
     })
     
     // Run the server!
     server.listen({ port: process.env.APP_PORT || 3333 }).then(() => {
-        console.log("Server Start");    
+        console.log("Server Start " + process.env.APP_PORT);    
     })
 }
 

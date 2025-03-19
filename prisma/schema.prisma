@@ -38,4 +38,5 @@ model Buttons {
   url String
   channelId BigInt
   channelOwner Channel @relation(fields: [channelId], references: [channelId])
+  createAt DateTime @default(now())
 }
