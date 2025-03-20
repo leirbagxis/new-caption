@@ -38,7 +38,7 @@ commands:
       - text: "⚙️ Configure Agora"
         webApp: "{webAppUrl}/{userId}/{channelId}"
       - text: "🔑 Transferir Acesso"
-        callback_data: "paccess"
+        callback_data: "paccess:{channelId}"
       - text: "🔄 Recarregar Dados"
         callback_data: "rr_{channelId}"
       - text: "🗑️ Deletar Canal"
@@ -46,11 +46,20 @@ commands:
 
   profile.user.channels.claim_ownership:
     message: "<b>🔑 Assumir Controle do Canal</b>\n\n<blockquote>📌 Canal: <i>{channelName}</i>\n🔗 ID do Canal: <code>{channelId}</code>\n👤 Cadastrado por: <i>{creatorName}\n         - ID: {creatorId})</i></blockquote>\n\n<b>🔹 Se você for o administrador principal deste canal e deseja assumir o controle, clique em 'Assumir Controle'. Após a confirmação, você será o único responsável pelas configurações do bot neste canal.</b>"
+    info_command: "<b>🔄 Transferência de Acesso</b>\n\n<blockquote>📌 Você pode transferir a posse deste canal para outro usuário. O novo proprietário poderá gerenciar todas as configurações normalmente.</blockquote>\n\n<b>⚠️ Atenção:</b>\n- Apenas o usuário que cadastrou o canal pode transferi-lo.\n- O novo dono deve ter interagido com o bot anteriormente.\n- Após a transferência, você perderá o controle sobre as configurações do canal.\n\n<b>✅ Para continuar, inicie o processo de transferência abaixo.</b>"
+    query_message: "<b>📩 Informe o ID do Usuário</b>\n\n<blockquote>📌 Você está prestes a transferir a posse do canal:</blockquote>\n\n🏷️ <b>Nome:</b> {channelName}\n🆔 <b>ID:</b> {channelId}\n👤 <b>Registrado por:</b> {ownerName} ({ownerId})\n\n<blockquote>✏️ Envie o ID do usuário para quem deseja transferir a posse.</blockquote>\n\n<b>⚠️ Certifique-se de que o usuário já interagiu com o bot antes.</b>\n\n<b>🔹 Aguarde a confirmação antes de concluir a transferência.</b>"
+    old_success_message: "<b>✅ Transferência Concluída</b>\n\n<blockquote>📌 A posse do canal foi transferida com sucesso para o novo usuário.</blockquote>\n\n🏷️ <b>Canal:</b> {channelName}\n🆔 <b>ID:</b> {channelId}\n👤 <b>Novo Dono:</b> {newOwnerName} ({newOwnerId})\n\n🚀 <b>Agora, o novo proprietário pode gerenciar as configurações do canal normalmente.</b>"
     success_message: "<b>✅ Sucesso!</b>\n\n<blockquote>Agora você é o novo administrador do canal <i>{channelName}</i> (ID: <code>{channelId}</code>)! Todos os controles e configurações do bot estão sob sua responsabilidade.</blockquote>\n\n<b>🔹 Lembre-se de ajustar as configurações de legenda conforme necessário!</b>"
     cancel_message: "<b>❌ Operação Cancelada</b>\n\nA mudança de proprietário do canal <i>{channelName}</i> (ID: <code>{channelId}</code>) foi cancelada. Nenhuma alteração foi feita."
+    failed_id: "<b>❌ ID Inválido</b>\n\n<blockquote>📌 O ID fornecido não é válido ou o usuário ainda não interagiu com o bot.</blockquote>\n\n🔹 <b>Verifique se o ID está correto e tente novamente.</b>\n\n🏷️ <b>Canal:</b> {channelName}\n🆔 <b>ID:</b> {channelId}\n👤 <b>Registrado por:</b> {ownerName} ({ownerId})\n\n<b>⚠️ O usuário deve ter iniciado o bot pelo menos uma vez para ser elegível para a transferência.</b>"
     buttons:
       - text: "📝 Meus Canais"
         callback_data: "profile.user.channels"
+      - text: "🏠 Início"
+        callback_data: "start"
+    transfer_buttons:
+      - text: "🔑 Transferir Acesso"
+        callback_data: "transfer:{channelId}"
       - text: "🏠 Início"
         callback_data: "start"
 

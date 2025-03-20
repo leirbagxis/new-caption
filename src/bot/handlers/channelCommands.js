@@ -1,6 +1,6 @@
-import { deleteChannelById, getChannelByChannelID, saveChannelService, updateChannelService, updateOwnerChannelService } from "../sevices/channelService.js";
+import { deleteChannelById, getChannelByChannelID, getChannelbyId, saveChannelService, updateChannelService, updateOwnerChannelService } from "../sevices/channelService.js";
 import { getUserById, saveUser } from "../sevices/userService.js"
-import { applyEntities, commands, createKeyboard, formatButtons, formatText, generateNumericId, logNotMsg, randomId, sleep } from "../util.js";
+import { applyEntities, commands, createKeyboard, formatButtons, formatText, generateNumericId, logNotMsg, randomId, removeTag, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
 
 const channelCommands = () => {
@@ -561,12 +561,158 @@ const editCaption = () => {
 }
 
 const claimOwnerShip = () => {
-    return async (ctx, next) => {
+    return async (ctx, next) => {        
+        const bot = ctx.botInfo
+
+        // ## funcao para mudar de dono via channel button
+        if (ctx.msg.reply_to_message) {
+            const user = ctx.from
+            const { reply_to_message } = ctx.msg
+            const newOwnerId = ctx.msg.text
+            const { from, text } = reply_to_message
+            const { old_success_message, failed_id, success_message, buttons } = commands["profile.user.channels.claim_ownership"]
+
+            if(text.includes("Informe o ID do Usuário")){
+
+                if (!newOwnerId || isNaN(Number(newOwnerId))) {
+                    return await ctx.reply(failed_id, {
+                        reply_to_message_id: ctx.msgId,
+                        parse_mode: "HTML",
+                        ...createKeyboard(buttons)
+                    })
+                }
+    
+                if(from.id === bot.id && from.username === bot.username && text.includes("ID: -100")) {
+                    const fields = text.split("\n")
+                    var channelId = fields[5].split(" ")
+                    channelId = channelId[2]
+
+                    let getNewOwnerUser
+                    try {
+                        getNewOwnerUser = await ctx.telegram.getChat(newOwnerId)                        
+                    } catch (error) {
+                        return await ctx.reply(failed_id, {
+                            reply_to_message_id: ctx.msgId,
+                            parse_mode: "HTML",
+                            ...createKeyboard(buttons)
+                        })
+                    }
+
+                    let checkAdmin
+                    try {
+                        checkAdmin = await ctx.telegram.getChatAdministrators(channelId);
+                    } catch (error) {
+                        return await ctx.reply("⚠️ Erro ao acessar canal\n\n🚫 O bot pode não estar no canal ou o ID está errado.", {
+                            reply_to_message_id: ctx.msgId,
+                            parse_mode: "HTML",
+                            ...createKeyboard(buttons)
+                        })
+                    }
+
+                    let verifyChannel
+                    try {
+                        verifyChannel = await getChannelbyId(user.id, channelId)
+                        console.log(verifyChannel);
+                        
+                        if (!verifyChannel){
+                            return await ctx.reply("🚫 Sem Permissão\n\n⚠️ Você não pode mais configurar esse canal.", {
+                                reply_to_message_id: ctx.msgId,
+                                parse_mode: "HTML",
+                                ...createKeyboard(buttons)
+                            })
+                        }
+                    } catch (error) {
+                        return await ctx.reply("🚫 Sem Permissão\n\n⚠️ Você não pode mais configurar esse canal.", {
+                            reply_to_message_id: ctx.msgId,
+                            parse_mode: "HTML",
+                            ...createKeyboard(buttons)
+                        })
+                    }
+
+                    const find = checkAdmin.find(user => user.user.id === getNewOwnerUser.id)
+                    
+                    if(!find) {
+                        return await ctx.reply("🚫 Sem Permissão\n\n⚠️ O usuário não é administrador/dono deste canal.", {
+                            reply_to_message_id: ctx.msgId,
+                            parse_mode: "HTML",
+                            ...createKeyboard(buttons)
+                        })
+                    }
+                    
+                    const updateOwner = await updateOwnerChannelService(channelId, getNewOwnerUser.id)
+
+                    if(updateOwner){
+
+                        const params = {
+                            channelName: updateOwner.title,
+                            channelId: updateOwner.channelId,
+                            newOwnerName: getNewOwnerUser.first_name,
+                            newOwnerId: getNewOwnerUser.id
+                        }
+                        await ctx.reply(formatText(old_success_message, params), {
+                            parse_mode: "HTML",
+                            ...createKeyboard(buttons)
+                        })
+
+                        return await ctx.telegram.sendMessage(getNewOwnerUser.id, formatText(success_message, params), {
+                            parse_mode: "HTML",
+                            ...createKeyboard(buttons)
+                        })
+                    }
+                    
+                }          
+            }
+            
+        }
+        
 
         // ### Funcao para confirmar/cancelar acao de assumir controle
         if(ctx.callbackQuery) {
 
             const { data } = ctx.callbackQuery
+
+            // ## funcao para mostrar descricao do comando transferir acesso
+            if(data.startsWith("paccess")) {
+                const { info_command, transfer_buttons } = commands["profile.user.channels.claim_ownership"]
+                const fields = data.split(":")
+
+                const params = {
+                    channelId: fields[1]
+                }
+
+                const buttons = formatButtons(transfer_buttons, params)
+                console.log(data);
+                
+                return await ctx.editMessageText(info_command, {
+                    parse_mode: "HTML",
+                    ...createKeyboard(buttons, 1)
+                })
+                
+            }
+
+            // ## funcao para iniciar processo de mudar owner channel
+            if(data.startsWith("transfer")) {
+                const { query_message, transfer_buttons } = commands["profile.user.channels.claim_ownership"]
+                const fields = data.split(":")
+
+                const getChannel = await getChannelByChannelID(fields[1])
+                const getUser = await ctx.telegram.getChat(Number(getChannel.ownerId))
+                const params = {
+                    channelId: getChannel.channelId,
+                    channelName: getChannel.title,
+                    ownerId: getChannel.ownerId,
+                    ownerName: getUser.first_name
+                }
+                
+
+                return await ctx.reply(formatText(query_message, params), {
+                    reply_to_message_id: ctx.msgId,
+                    parse_mode: "HTML",
+                    reply_markup: {
+                        force_reply: true
+                    }
+                })
+            }
 
             // ### Aceitar confirmacao de mudanca de owner
             if(data.startsWith("accept_claim")) {
