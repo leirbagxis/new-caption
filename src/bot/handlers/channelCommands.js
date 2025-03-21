@@ -334,9 +334,7 @@ const addChannel = () => {
                     inviteUrl: channel.invite_link,
                     caption: `ㅤ   
   
-ㅤ  -\` bʏ 𔘓 <a href='t.me/${bot.username}'>${channel.title}</a> ˳ ✨ㅤ.ᐟㅤ
-  
-ㅤ`
+ㅤ  -\` bʏ 𔘓 <a href='t.me/${bot.username}'>${channel.title}</a> ˳ ✨ㅤ.ᐟㅤ`
                 }
 
                 const save = await saveChannelService(payload)
@@ -492,7 +490,7 @@ const editCaption = () => {
                         caption = ""
                     }
 
-                    const newCaption = applyEntities(`${caption}${channel.caption}`, caption_entities)
+                    const newCaption = applyEntities(`${caption}\n\n${channel.caption}`, caption_entities)
                     
                     const edit = await ctx.editMessageCaption(newCaption, {
                         parse_mode: "HTML",
@@ -517,7 +515,7 @@ const editCaption = () => {
                         caption = ""
                     }
 
-                    const newCaption = applyEntities(`${caption}${channel.caption}`, caption_entities)
+                    const newCaption = applyEntities(`${caption}\n\n${channel.caption}`, caption_entities)
                     
                     const edit = await ctx.editMessageCaption(newCaption, {
                         parse_mode: "HTML",

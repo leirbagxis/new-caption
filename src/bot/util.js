@@ -102,15 +102,25 @@ const applyEntities = (text, entities = []) => {
       spoiler: 'tg-spoiler'
   };
 
-  entities.forEach(({ offset, length, type }) => {
-      let tag = tagMap[type];
-      if (!tag) return;
+  entities.forEach((entities) => {
+    const { offset, length, type, url } = entities
 
-      if (!openTags[offset]) openTags[offset] = [];
-      if (!closeTags[offset + length]) closeTags[offset + length] = [];
+    if(type === "text_link") {
+      openTags[offset] = openTags[offset] || [];
+      closeTags[offset + length] = closeTags[offset + length] || [];
 
-      openTags[offset].push(`<${tag}>`);
-      closeTags[offset + length].unshift(`</${tag}>`);  
+      openTags[offset].push(`<a href='${url}'>`);
+      closeTags[offset + length].unshift(`</a>`); 
+    }
+
+    let tag = tagMap[type];
+    if (!tag) return;
+
+    if (!openTags[offset]) openTags[offset] = [];
+    if (!closeTags[offset + length]) closeTags[offset + length] = [];
+
+    openTags[offset].push(`<${tag}>`);
+    closeTags[offset + length].unshift(`</${tag}>`);  
   });
 
   let result = '';
