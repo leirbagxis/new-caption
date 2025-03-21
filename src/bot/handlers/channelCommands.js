@@ -302,7 +302,7 @@ const addChannel = () => {
                 return ctx.reply(formatText(notfound_error, params), {
                     reply_to_message_id: message_id,
                     parse_mode: "HTML",
-                    ...urlCreateKeyboard(error_buttons, 2)
+                    ...createKeyboard(error_buttons, 2)
                 }) 
             }
             
