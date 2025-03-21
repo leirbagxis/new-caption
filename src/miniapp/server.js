@@ -27,7 +27,7 @@ const startMiniApp = async () => {
     
     server.register(apiRouter, { prefix: "/api" })
     
-    server.get('/api', (request, reply) => {
+    server.get('/', (request, reply) => {
         reply.send({ hello: 'world' })
     })
     

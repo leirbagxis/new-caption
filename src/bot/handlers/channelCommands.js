@@ -332,11 +332,11 @@ const addChannel = () => {
                     channelId: channel.id,
                     title: channel.title,
                     inviteUrl: channel.invite_link,
-                    caption: `   
-  
-ㅤ  -\` bʏㅤ ${channel.title}ㅤ.ᐟㅤloveㅤısㅤαrtㅤ𔘓 <a href='t.me/${bot.username}'>t.me/legendas</a> ˳ 🍒  
-  ㅤ
-`
+                    caption: `ㅤ   
+  
+ㅤ  -\` bʏ 𔘓 <a href='t.me/${bot.username}'>${channel.title}</a> ˳ ✨ㅤ.ᐟㅤ
+  
+ㅤ`
                 }
 
                 const save = await saveChannelService(payload)
