@@ -32,7 +32,10 @@ const startMiniApp = async () => {
     })
     
     // Run the server!
-    server.listen({ port: process.env.APP_PORT || 3333 }).then(() => {
+    server.listen({
+        port: process.env.APP_PORT || 3333,
+        host: "0.0.0.0"
+    }).then(() => {
         console.log("Server Start " + process.env.APP_PORT);    
     })
 }

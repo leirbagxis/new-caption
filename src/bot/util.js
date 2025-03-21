@@ -16,6 +16,10 @@ const formatText = (text, params = {}) => {
     params.botId = process.env.BOT_TOKEN.split(":")[0];
   }
 
+  if(!params.botVersion) {
+    params.botVersion = process.env.BOT_VERSION.split(":")[0];
+  }
+
   return text.replace(/{(\w+)}/g, (_,key) => params[key] || `${key}`)
 }
 

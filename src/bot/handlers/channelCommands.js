@@ -565,13 +565,13 @@ const claimOwnerShip = () => {
         const bot = ctx.botInfo
 
         // ## funcao para mudar de dono via channel button
-        if (ctx.msg.reply_to_message) {
+        if (ctx.msg && ctx.msg.reply_to_message && ctx.msg.reply_to_message.text) {
             const user = ctx.from
             const { reply_to_message } = ctx.msg
             const newOwnerId = ctx.msg.text
             const { from, text } = reply_to_message
             const { old_success_message, failed_id, success_message, buttons } = commands["profile.user.channels.claim_ownership"]
-
+            
             if(text.includes("Informe o ID do Usuário")){
 
                 if (!newOwnerId || isNaN(Number(newOwnerId))) {
@@ -609,10 +609,14 @@ const claimOwnerShip = () => {
                         })
                     }
 
+                    saveUser({
+                        userId: BigInt(getNewOwnerUser.id),
+                        firstName: getNewOwnerUser.first_name
+                    })
+
                     let verifyChannel
                     try {
                         verifyChannel = await getChannelbyId(user.id, channelId)
-                        console.log(verifyChannel);
                         
                         if (!verifyChannel){
                             return await ctx.reply("🚫 Sem Permissão\n\n⚠️ Você não pode mais configurar esse canal.", {
@@ -681,7 +685,6 @@ const claimOwnerShip = () => {
                 }
 
                 const buttons = formatButtons(transfer_buttons, params)
-                console.log(data);
                 
                 return await ctx.editMessageText(info_command, {
                     parse_mode: "HTML",
