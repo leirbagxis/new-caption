@@ -96,6 +96,4 @@ const allCommands = () => {
   }
 }
 
-
-
 export { allCommands }

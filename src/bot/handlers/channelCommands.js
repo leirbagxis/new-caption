@@ -1,6 +1,6 @@
 import { deleteChannelById, getChannelByChannelID, getChannelbyId, saveChannelService, updateChannelService, updateOwnerChannelService } from "../sevices/channelService.js";
 import { getUserById, saveUser } from "../sevices/userService.js"
-import { applyEntities, commands, createKeyboard, formatButtons, formatText, generateNumericId, logNotMsg, randomId, removeTag, sleep } from "../util.js";
+import { applyEntities, commands, createKeyboard, detectParseMode, formatButtons, formatText, generateNumericId, logNotMsg, randomId, removeTag, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
 import { generationSignedUrl } from "../../security/authSignature.js";
 
@@ -333,7 +333,7 @@ const addChannel = () => {
                     channelId: channel.id,
                     title: channel.title,
                     inviteUrl: channel.invite_link,
-                    caption: `ㅤ  -\` bʏ 𔘓 <a href='t.me/${bot.username}'>${channel.title}</a> ˳ ✨ㅤ.ᐟㅤ`
+                    caption: `ㅤ  -\` bʏ 𔘓 [${channel.title}](t.me/${bot.username}) ˳ ✨ㅤ.ᐟㅤ`
                 }
 
                 const save = await saveChannelService(payload)
@@ -410,7 +410,8 @@ const editCaption = () => {
                 try {
 
                     const {text, entities } = ctx.channelPost
-                    const newCaption = applyEntities(`${text}\n\n${channel.caption}`, entities)
+                    const parsedCaption = detectParseMode(channel.caption)
+                    const newCaption = applyEntities(`${text}\n\n${parsedCaption}`, entities)
                     
                     const edit = await ctx.editMessageText(newCaption, {
                         parse_mode: "HTML",
@@ -474,8 +475,8 @@ const editCaption = () => {
                     if(caption === undefined) {
                         caption = ""
                     }
-
-                    const newCaption = applyEntities(`${caption}\n\n${channel.caption}`, caption_entities)
+                    const parsedCaption = detectParseMode(channel.caption)
+                    const newCaption = applyEntities(`${caption}\n\n${parsedCaption}`, caption_entities)
                     
                     const edit = await ctx.editMessageCaption(newCaption, {
                         parse_mode: "HTML",
@@ -500,7 +501,8 @@ const editCaption = () => {
                         caption = ""
                     }
 
-                    const newCaption = applyEntities(`${caption}\n\n${channel.caption}`, caption_entities)
+                    const parsedCaption = detectParseMode(channel.caption)
+                    const newCaption = applyEntities(`${caption}\n\n${parsedCaption}`, caption_entities)
                     
                     const edit = await ctx.editMessageCaption(newCaption, {
                         parse_mode: "HTML",
@@ -520,7 +522,8 @@ const editCaption = () => {
             if(ctx.channelPost.animation && channel.settings.gif) {
                 try {
                     await sleep(500);
-                    const edit = await ctx.editMessageCaption(channel.caption, {
+                    const parsedCaption = detectParseMode(channel.caption)
+                    const edit = await ctx.editMessageCaption(parsedCaption, {
                         parse_mode: "HTML",
                         ...createKeyboard(buttons, 1)
                     })

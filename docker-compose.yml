@@ -22,6 +22,7 @@ services:
       - WEBAPP_URL=${WEBAPP_URL}
       - APP_PORT=${APP_PORT}
       - BOT_VERSION=${BOT_VERSION}
+      - SECRET_KEY=${SECRET_KEY}
     volumes:
       - ./:/app
       - /app/node_modules

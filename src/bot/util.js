@@ -155,10 +155,134 @@ const generateNumericId = (userId) => {
   return `${userId}${Date.now().toString().slice(-6)}`;
 };
 
-function removeTag(str) {
+const removeTag = (str) => {
   return str.replace(/<\/?[^>]+(>|$)/g, "")
             .replace(/</g, '&lt;')
             .replace(/</g, '&gt;')
 }
 
-export { commands, cleanCommand, formatText, createKeyboard, formatDate, randomId, applyEntities, sleep, logNotMsg, formatButtons, generateNumericId, removeTag }
+const processInlineFormatting = (text) => {
+  // Código inline
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  
+  // Links e menções
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
+    return `<a href="${url}">${linkText}</a>`;
+  });
+  
+  // Emoji
+  text = text.replace(/!\[([^\]]+)\]\(tg:\/\/emoji\?id=([^)]+)\)/g, '<tg-emoji emoji-id="$2"></tg-emoji>');
+  
+  // Spoilers
+  text = processNestedFormatting(text, '\\|\\|', '\\|\\|', '<span class="tg-spoiler">', '</span>');
+  
+  // Strikethrough
+  text = processNestedFormatting(text, '~', '~', '<s>', '</s>');
+  
+  // Underline
+  text = processNestedFormatting(text, '__', '__', '<u>', '</u>');
+  
+  // Italic
+  text = processNestedFormatting(text, '_', '_', '<i>', '</i>');
+  
+  // Bold
+  text = processNestedFormatting(text, '\\*', '\\*', '<b>', '</b>');
+  
+  return text;
+}
+
+const processNestedFormatting = (text, openPattern, closePattern, openTag, closeTag) => {
+  
+  const regex = new RegExp(`${openPattern}(.*?)${closePattern}`, 'gs');
+  const matches = [];
+  
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    matches.push({
+      start: match.index,
+      end: match.index + match[0].length,
+      content: match[1]
+    });
+  }
+  
+  for (let i = matches.length - 1; i >= 0; i--) {
+    const { start, end, content } = matches[i];
+    text = text.substring(0, start) + openTag + content + closeTag + text.substring(end);
+  }
+  
+  return text;
+}
+
+const detectParseMode = (text) => {
+  if (!text) return '';
+
+  let lines = text.split('\n');
+  let result = [];
+  
+  let inCodeBlock = false;
+  let codeLanguage = "";
+  let codeContent = [];
+  let blockQuoteLines = [];
+  let expandableBlockQuoteLines = [];
+  
+  let i = 0;
+  while (i < lines.length) {
+    let line = lines[i];
+    
+    if (line.startsWith('```') && !inCodeBlock) {
+      inCodeBlock = true;
+      if (line.length > 3) {
+        codeLanguage = line.substring(3);
+        codeContent = [];
+      } else {
+        codeLanguage = "";
+        codeContent = [];
+      }
+      i++;
+      continue;
+    } else if (line.startsWith('```') && inCodeBlock) {
+      inCodeBlock = false;
+      if (codeLanguage) {
+        result.push(`<pre><code class="language-${codeLanguage}">${codeContent.join('\n')}</code></pre>`);
+      } else {
+        result.push(`<pre>${codeContent.join('\n')}</pre>`);
+      }
+      i++;
+      continue;
+    } else if (inCodeBlock) {
+      codeContent.push(line);
+      i++;
+      continue;
+    }
+    
+    if (line.startsWith('**>') && line.endsWith('||')) {
+      expandableBlockQuoteLines = [line.substring(3, line.length - 2)];
+      i++;
+      while (i < lines.length && lines[i].startsWith('>')) {
+        expandableBlockQuoteLines.push(lines[i].substring(1).trim());
+        i++;
+      }
+      result.push(`<blockquote expandable>${expandableBlockQuoteLines.join('\n')}</blockquote>`);
+      continue;
+    }
+    
+    if (line.startsWith('>')) {
+      blockQuoteLines = [line.substring(1).trim()];
+      i++;
+      while (i < lines.length && lines[i].startsWith('>')) {
+        blockQuoteLines.push(lines[i].substring(1).trim());
+        i++;
+      }
+      result.push(`<blockquote>${blockQuoteLines.join('\n')}</blockquote>`);
+      continue;
+    }
+    
+    let processedLine = processInlineFormatting(line);
+    result.push(processedLine);
+    i++;
+  }
+  
+  return result.join('\n');
+}
+
+export { commands, cleanCommand, formatText, createKeyboard, formatDate, randomId, applyEntities, sleep, logNotMsg, formatButtons, generateNumericId, removeTag, detectParseMode }
