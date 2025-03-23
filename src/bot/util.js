@@ -47,6 +47,15 @@ const formatButtons = (yamlObj, params = {}) => {
   return formatValue(yamlObj);
 };
 
+const formatDate = (date) => {
+  const ndate = new Date(date)
+  const day = String(ndate.getDate()).padStart(2, '0')
+  const month = String(ndate.getMonth() + 1).padStart(2, '0')
+  const year= ndate.getFullYear()
+
+  return `${day}/${month}/${year}`
+}
+
 const createKeyboard = (dynamicButtons = [], columns = 2) => {
   const buttons = [
     ...dynamicButtons.map(btn => {
@@ -67,15 +76,6 @@ const createKeyboard = (dynamicButtons = [], columns = 2) => {
     }, []
   )
   )
-}
-
-const formatDate = (date) => {
-  const ndate = new Date(date)
-  const day = String(ndate.getDate()).padStart(2, '0')
-  const month = String(ndate.getMonth() + 1).padStart(2, '0')
-  const year= ndate.getFullYear()
-
-  return `${day}/${month}/${year}`
 }
 
 const randomId = (tamanho) => {
@@ -156,7 +156,9 @@ const generateNumericId = (userId) => {
 };
 
 function removeTag(str) {
-  return str.replace(/<\/?[^>]+(>|$)/g, "");
+  return str.replace(/<\/?[^>]+(>|$)/g, "")
+            .replace(/</g, '&lt;')
+            .replace(/</g, '&gt;')
 }
 
 export { commands, cleanCommand, formatText, createKeyboard, formatDate, randomId, applyEntities, sleep, logNotMsg, formatButtons, generateNumericId, removeTag }

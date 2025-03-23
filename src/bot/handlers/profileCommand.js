@@ -1,5 +1,5 @@
 import { getUserById, saveUser } from "../sevices/userService.js"
-import { cleanCommand, commands, createKeyboard, formatButtons, formatDate, formatText } from "../util.js";
+import { cleanCommand, commands, createKeyboard, formatButtons, formatDate, formatText, removeTag } from "../util.js";
 
 const profileCommand = () => {
     return async(ctx, next) => {
@@ -11,7 +11,7 @@ const profileCommand = () => {
                 const user = await ctx.from;
                 const params = {
                     userId: user.id,
-                    firstName: user.first_name
+                    firstName: removeTag(user.first_name)
                 }
             
                 const save = await saveUser(params)

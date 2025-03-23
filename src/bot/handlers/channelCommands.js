@@ -13,7 +13,7 @@ const channelCommands = () => {
                 const user = await ctx.from;                
                 const params = {
                     userId: user.id,
-                    firstName: user.first_name
+                    firstName: removeTag(user.first_name)
                 }
                 const save = await saveUser(params)
                 const { data } = ctx.callbackQuery

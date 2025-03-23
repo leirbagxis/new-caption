@@ -1,5 +1,5 @@
 import { saveUser } from "../sevices/userService.js";
-import { cleanCommand, commands, createKeyboard, formatText } from "../util.js";
+import { cleanCommand, commands, createKeyboard, formatText, removeTag } from "../util.js";
 
 const allCommands = () => {
   return async (ctx, next) => {
@@ -20,7 +20,7 @@ const allCommands = () => {
       // ## Params Principal
       const params = {
         userId: user.id,
-        firstName: user.first_name,
+        firstName: removeTag(user.first_name),
         botId: id,
         botUsername: "@" + username,
         ownerUser
@@ -62,7 +62,7 @@ const allCommands = () => {
         // ## Params Principal
         const params = {
           userId: user.id,
-          firstName: user.first_name,
+          firstName: removeTag(user.first_name),
           botId: id,
           botUsername: "@" + username,
           ownerUser
