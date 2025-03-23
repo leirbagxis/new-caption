@@ -36,9 +36,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Extrair ID do usuário e do chat da URL
     const url = document.URL.split("/");
     app.userId = url[3];
-    app.chatId = url[4];
+    splitChannel = url[4].split("?signature=")
+    app.chatId = splitChannel[0]
+    app.signature = splitChannel[1]
     
-    const apiUrl = `/api/user/${app.userId}/${app.chatId}`;
+    
+    const apiUrl = `/api/user/${app.userId}/${app.chatId}?signature=${app.signature}`;
 
     // Função para exibir toast de notificação
     function showToast(message, type = 'success') {
@@ -156,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Função para atualizar permissões
     async function updatePermissions(settings) {
       try {
-        const response = await fetch(`/api/atualizar-permissao/${app.userId}/${app.chatId}`, {
+        const response = await fetch(`/api/atualizar-permissao/${app.userId}/${app.chatId}?signature=${app.signature}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(settings)
@@ -325,7 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       elements.saveCaptionBtn.disabled = true;
       
       try {
-        const response = await fetch(`/api/editar-legenda/${app.userId}/${app.chatId}`, {
+        const response = await fetch(`/api/editar-legenda/${app.userId}/${app.chatId}?signature=${app.signature}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ legenda: caption })
@@ -362,7 +365,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       elements.saveButtonBtn.innerHTML = '<div class="loader"></div>';
 
       try {
-        const response = await fetch(`/api/adicionar-botao/${app.userId}/${app.chatId}`, {
+        const response = await fetch(`/api/adicionar-botao/${app.userId}/${app.chatId}?signature=${app.signature}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ buttonName, buttonUrl })
@@ -410,7 +413,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         button.disabled = true;
 
         try {
-          const response = await fetch(`/api/atualizar-botao/${app.userId}/${app.chatId}`, {
+          const response = await fetch(`/api/atualizar-botao/${app.userId}/${app.chatId}?signature=${app.signature}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ buttonName, buttonUrl, buttonId })
@@ -440,7 +443,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
           if (confirmation.isConfirmed) {
             try {
-              const response = await fetch(`/api/deletar-botao/${app.userId}/${app.chatId}`, {
+              const response = await fetch(`/api/deletar-botao/${app.userId}/${app.chatId}?signature=${app.signature}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ buttonId })

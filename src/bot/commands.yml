@@ -36,12 +36,12 @@ commands:
         callback_data: "profile.user.channels"
     channel_buttons:
       - text: "⚙️ Configure Agora"
-        webApp: "{webAppUrl}/{userId}/{channelId}"
+        webApp: "{webAppUrl}/{signatureHash}"
       - text: "🔑 Transferir Acesso"
         callback_data: "paccess:{channelId}"
       - text: "🔄 Recarregar Dados"
         callback_data: "rr_{channelId}"
-      - text: "🗑️ Deletar Canal"
+      - text: "🗑️ Remover Canal"
         callback_data: "del_{channelId}"
 
   profile.user.channels.claim_ownership:
@@ -85,6 +85,8 @@ commands:
     success: "<b>🎉 Sucesso, <a href='tg://user?id={botId}'>{firstName}</a>!</b>\n\n<b><i>✅ Seu <a href='tg://user?id={botId}'>Canal</a> foi vinculado com sucesso ao bot!</i></b>\n\n🔥 Agora, todas as postagens serão acompanhadas automaticamente por legendas personalizadas.\n\n📌 Se precisar ajustar alguma configuração, consulte a aba <a href='tg://user?id={botId}'>Ajuda</a>!"
     cancel: "<b><i>🔄 <a href='tg://user?id={botId}'>Adicionar</a> • Operação Cancelada!</i></b>\n<blockquote><b><i>❌ Se precisar de ajuda para adicionar o <a href='tg://user?id={botId}'>Canal</a>, consulte a aba <a href='tg://user?id={botId}'>Ajuda</a> e siga as instruções.</i></b></blockquote>"
     buttons:
+      - text: "⚙️ Configure Agora"
+        webApp: "{webAppUrl}/{signatureHash}"
       - text: "📢 Canais"
         callback_data: "profile.user.channels"
       - text: "🏠 Início"

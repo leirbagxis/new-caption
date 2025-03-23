@@ -3,6 +3,8 @@ import fastifyCors from "@fastify/cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import apiRouter from "./router.js"
+import { validateSignature } from "../security/authSignature.js";
+import { getChannelbyId } from "../bot/sevices/channelService.js";
 
 const startMiniApp = async () => {
     const server = Fastify()
@@ -21,8 +23,24 @@ const startMiniApp = async () => {
     })
     
     // exite html para usuario especifico
-    server.get('/:userId/:channelID', async (request, reply) => {
-        return reply.sendFile('index.html');
+    server.get('/:userId/:channelId', async (request, reply) => {
+        try {
+            const { userId, channelId } = request.params
+            const { signature } = request.query
+
+            if (!validateSignature(userId, channelId, signature)) {
+                return reply.status(403).send({ error: "Assinatura Invalida"})
+            }
+
+            if (!(await getChannelbyId(userId, channelId))) {
+                return reply.status(403).send({ error: "Acesso Negado"})
+            }
+            
+            return reply.sendFile('index.html');
+        } catch (error) {
+            
+        }
+        
     });
     
     server.register(apiRouter, { prefix: "/api" })

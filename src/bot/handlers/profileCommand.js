@@ -1,6 +1,6 @@
 import { getUserById, saveUser } from "../sevices/userService.js"
 import { cleanCommand, commands, createKeyboard, formatButtons, formatDate, formatText, removeTag } from "../util.js";
-
+import { generationSignedUrl } from "../../security/authSignature.js";
 const profileCommand = () => {
     return async(ctx, next) => {
         
@@ -60,7 +60,8 @@ const profileCommand = () => {
                     const paramsB = {
                         webAppUrl: process.env.WEBAPP_URL,
                         userId: user.id,
-                        channelId: channelId[1]
+                        channelId: channelId[1],
+                        signatureHash: generationSignedUrl(user.id, channelId[1])
                     }                    
 
                     const repackButtons = formatButtons(channel_buttons, paramsB)

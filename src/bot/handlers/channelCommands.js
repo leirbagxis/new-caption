@@ -2,6 +2,7 @@ import { deleteChannelById, getChannelByChannelID, getChannelbyId, saveChannelSe
 import { getUserById, saveUser } from "../sevices/userService.js"
 import { applyEntities, commands, createKeyboard, formatButtons, formatText, generateNumericId, logNotMsg, randomId, removeTag, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
+import { generationSignedUrl } from "../../security/authSignature.js";
 
 const channelCommands = () => {
     return async(ctx, next) => {
@@ -170,7 +171,7 @@ const addChannel = () => {
             if(!from.is_bot) {
                 await saveUser({
                     userId: from.id,
-                    firstName: from.first_name
+                    firstName: removeTag(from.first_name)
                 })
             }
             
@@ -233,7 +234,7 @@ const addChannel = () => {
     
                 await saveUser({
                     userId: from.id,
-                    firstName: from.first_name
+                    firstName: removeTag(from.first_name)
                 })
     
                 if (type !== "channel") {
@@ -339,19 +340,20 @@ const addChannel = () => {
 
                 if(save) {
                     await deleteCache(data[1])
-                    
 
-                    const channelBtn = [
-                        { text: "Configure Agora", webApp: `${process.env.WEBAPP_URL}/${save.ownerId}/${save.channelId}` }
-                    ]
+                    const paramsB = {
+                        webAppUrl: process.env.WEBAPP_URL,
+                        userId: save.ownerId,
+                        channelId: save.channelId,
+                        signatureHash: generationSignedUrl(save.ownerId, save.channelId),
+                        firstName: removeTag(user.first_name)
+                    }                                       
 
-                    const params = {
-                        firstName: user.first_name
-                    }
+                    const repackButtons = formatButtons(buttons, paramsB)
 
-                    const sucs = await ctx.editMessageText(formatText(success, params), {
+                    const sucs = await ctx.editMessageText(formatText(success, paramsB), {
                         parse_mode: "HTML",
-                        ...createKeyboard([...channelBtn, ...buttons], 1)
+                        ...createKeyboard(repackButtons, 1)
                     })
 
                     return await ctx.telegram.setMessageReaction(
@@ -373,22 +375,7 @@ const addChannel = () => {
                 })
             }
         }
-
-        // } catch (error) {
-        //     console.log("nao foi possivel adicionar o canal: " + error);
-        //     const { from } = ctx.callbackQuery
-
-        //     const params = {
-        //         botUsername: "@" + username,
-        //         firstName: from.first_name || "n/a"
-        //     }            
-
-        //     return ctx.editMessageText(formatText(notfound_error, params), {
-        //         parse_mode: "HTML",
-        //         ...createKeyboard(error_buttons)
-        //     })
-        // }
-        
+                
         next()
     }
 }
@@ -607,7 +594,7 @@ const claimOwnerShip = () => {
 
                     saveUser({
                         userId: BigInt(getNewOwnerUser.id),
-                        firstName: getNewOwnerUser.first_name
+                        firstName: removeTag(getNewOwnerUser.first_name)
                     })
 
                     let verifyChannel
@@ -646,7 +633,7 @@ const claimOwnerShip = () => {
                         const params = {
                             channelName: updateOwner.title,
                             channelId: updateOwner.channelId,
-                            newOwnerName: getNewOwnerUser.first_name,
+                            newOwnerName: removeTag(getNewOwnerUser.first_name),
                             newOwnerId: getNewOwnerUser.id
                         }
                         await ctx.reply(formatText(old_success_message, params), {
