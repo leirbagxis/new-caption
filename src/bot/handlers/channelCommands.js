@@ -3,6 +3,7 @@ import { getUserById, saveUser } from "../sevices/userService.js"
 import { applyEntities, commands, createKeyboard, detectParseMode, formatButtons, formatText, generateNumericId, logNotMsg, randomId, removeTag, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
 import { generationSignedUrl } from "../../security/authSignature.js";
+import { Markup } from "telegraf";
 
 const channelCommands = () => {
     return async(ctx, next) => {
@@ -431,8 +432,38 @@ const editCaption = () => {
             if(ctx.channelPost.audio && channel.settings.audio) {
                 try {
                     await sleep(500);
+                    const parsedCaption = detectParseMode(channel.caption)
 
-                    const edit = await ctx.telegram.editMessageCaption(channelId, message_id, null, formatText(channel.caption), {
+                    const { media_group_id, message_id, audio } = ctx.channelPost
+
+                    if(media_group_id){
+
+                        try {
+                            
+                            const userButton = channel.buttons.map(btn=> [{
+                                text: btn.text,
+                                url: btn.url
+                            }])
+                            
+                            const edit = await ctx.replyWithAudio(audio.file_id, {
+                                caption: formatText(parsedCaption),
+                                parse_mode: "HTML",
+                                reply_markup: {
+                                    inline_keyboard: userButton
+                                }
+                            });
+                            await ctx.deleteMessage(message_id)
+                            return edit
+
+                        } catch (error) {
+                            await ctx.telegram.editMessageCaption(channelId, message_id, null, formatText(parsedCaption), {
+                                parse_mode: "HTML",
+                                ...createKeyboard(buttons, 1)
+                            })
+                        }
+                    }
+                    
+                    const edit = await ctx.telegram.editMessageCaption(channelId, message_id, null, formatText(parsedCaption), {
                         parse_mode: "HTML",
                         ...createKeyboard(buttons, 1)
                     })
@@ -445,7 +476,7 @@ const editCaption = () => {
                     return await logNotMsg(ctx, "Audio")
                 }
             }
-
+            
             // ### Edit Sticker Applied Caption
             if(ctx.channelPost.sticker && channel.settings.sticker) {
                 try {
