@@ -60,8 +60,8 @@ commands:
     transfer_buttons:
       - text: "🔑 Transferir Acesso"
         callback_data: "transfer:{channelId}"
-      - text: "🏠 Início"
-        callback_data: "start"
+      - text: "⬅️ Voltar"
+        callback_data: "cf_{channelId}"
 
   help:
     message: "<b>🆘 Guia Rápido para Configuração</b>\n\n💡 Ativar as <b>Legendas Automáticas</b> no seu canal é simples:\n\n1️⃣ <b>Adicione o bot</b> {botUsername} ao seu canal.\n2️⃣ Conceda as seguintes permissões:\n   ✔️ Editar mensagens\n   ✔️ Fixar mensagens\n   ✔️ Publicar postagens\n   ✔️ Convidar usuários via link\n\n<blockquote><b>📌 Após isso, o bot enviará uma confirmação para você, é só confimar e o bot será ativado e pré configurado automaticamente.</b></blockquote>\n\n<b>Caso não funcione, encaminhe qualquer mensagem do seu canal mencionando o nome do canal para ativá-lo manualmente.</b>"
@@ -87,8 +87,8 @@ commands:
     buttons:
       - text: "⚙️ Configure Agora"
         webApp: "{webAppUrl}/{signatureHash}"
-      - text: "📢 Canais"
-        callback_data: "profile.user.channels"
+      - text: "📢 Meu Canal"
+        callback_data: "cf_{channelId}"
       - text: "🏠 Início"
         callback_data: "start"
     error_buttons:

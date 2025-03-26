@@ -250,7 +250,7 @@ const addChannel = () => {
                     return ctx.telegram.sendMessage(from.id, formatText(exist_error), {
                         reply_to_message_id: message_id,
                         parse_mode: "HTML",
-                        ...createKeyboard(buttons)
+                        ...createKeyboard(error_buttons)
                     })
                 }
     
@@ -371,7 +371,7 @@ const addChannel = () => {
 
                 return ctx.editMessageText(formatText(cancel), {
                     parse_mode: "HTML",
-                    ...createKeyboard(buttons)
+                    ...createKeyboard(error_buttons)
                 })
             }
         }
