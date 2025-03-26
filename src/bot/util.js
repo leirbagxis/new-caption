@@ -3,7 +3,6 @@ import fs from "fs";
 import yaml from "js-yaml";
 import { Markup } from "telegraf";
 import { getChannelByChannelID } from "./sevices/channelService.js";
-import { forceReply } from "telegraf/markup";
 
 const commands = yaml.load(fs.readFileSync('./src/bot/commands.yml', 'utf-8')).commands;
 

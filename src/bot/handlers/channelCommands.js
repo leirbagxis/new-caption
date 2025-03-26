@@ -333,8 +333,7 @@ const addChannel = () => {
                     ownerId: user.id,
                     channelId: channel.id,
                     title: channel.title,
-                    inviteUrl: channel.invite_link,
-                    caption: `ㅤ  -\` bʏ 𔘓 [${channel.title}](t.me/${bot.username}) ˳ ✨ㅤ.ᐟㅤ`
+                    inviteUrl: channel.invite_link
                 }
 
                 const save = await saveChannelService(payload)
@@ -395,23 +394,31 @@ const editCaption = () => {
                 title: chat.title
             }
             await updateChannelService(updatePayload)
-
+            
             const channel = await getChannelByChannelID(BigInt(channelId))
             if(!channel) return;
-            
+            const getChannel = await ctx.telegram.getChat(channelId)
+
+            const channelParams = {
+                botUsername: "t.me/" + ctx.botInfo.username,
+                title: getChannel.title,
+                invite: getChannel.active_usernames?.[0]
+                        ? "t.me/" + getChannel.active_usernames[0]
+                        : getChannel.invite_link
+            }
 
             const buttons = channel.buttons.map(btn => ({
                 text: btn.text,
                 url: btn.url
             }))
 
-
             // ### Edit Message Applied Caption
             if(ctx.channelPost.text && channel.settings.message) {
                 try {
 
                     const {text, entities } = ctx.channelPost
-                    const parsedCaption = detectParseMode(channel.caption)
+                    const caption = formatText(channel.caption, channelParams)
+                    const parsedCaption = detectParseMode(caption)
                     const newCaption = applyEntities(`${text}\n\n${parsedCaption}`, entities)
                     
                     const edit = await ctx.editMessageText(newCaption, {
@@ -432,7 +439,8 @@ const editCaption = () => {
             if(ctx.channelPost.audio && channel.settings.audio) {
                 try {
                     await sleep(500);
-                    const parsedCaption = detectParseMode(channel.caption)
+                    const caption = formatText(channel.caption, channelParams)
+                    const parsedCaption = detectParseMode(caption)
 
                     const { media_group_id, message_id, audio } = ctx.channelPost
 
@@ -506,7 +514,8 @@ const editCaption = () => {
                     if(caption === undefined) {
                         caption = ""
                     }
-                    const parsedCaption = detectParseMode(channel.caption)
+                    const formatCaption = formatText(channel.caption, channelParams)
+                    const parsedCaption = detectParseMode(formatCaption)
                     const newCaption = applyEntities(`${caption}\n\n${parsedCaption}`, caption_entities)
                     
                     const edit = await ctx.editMessageCaption(newCaption, {
@@ -532,7 +541,8 @@ const editCaption = () => {
                         caption = ""
                     }
 
-                    const parsedCaption = detectParseMode(channel.caption)
+                    const formatCaption = formatText(channel.caption, channelParams)
+                    const parsedCaption = detectParseMode(formatCaption)
                     const newCaption = applyEntities(`${caption}\n\n${parsedCaption}`, caption_entities)
                     
                     const edit = await ctx.editMessageCaption(newCaption, {
@@ -553,7 +563,8 @@ const editCaption = () => {
             if(ctx.channelPost.animation && channel.settings.gif) {
                 try {
                     await sleep(500);
-                    const parsedCaption = detectParseMode(channel.caption)
+                    const caption = formatText(channel.caption, channelParams)
+                    const parsedCaption = detectParseMode(caption)
                     const edit = await ctx.editMessageCaption(parsedCaption, {
                         parse_mode: "HTML",
                         ...createKeyboard(buttons, 1)
