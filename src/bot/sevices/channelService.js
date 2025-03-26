@@ -54,14 +54,13 @@ const deleteChannelById = async (ownerId, channelId) => {
 const saveChannelService = async (channel) => {
     
     try {
-        const { ownerId, channelId, title, inviteUrl, caption } = channel
+        const { ownerId, channelId, title, inviteUrl } = channel
     
         const save = await connection.channel.create({
             data: {
                 ownerId,
                 channelId,
                 title,
-                caption,
                 settings: {
                     message: true,
                     sticker: true,
