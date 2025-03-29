@@ -4,7 +4,7 @@ import { cleanCommand, commands, createKeyboard, formatText, removeTag } from ".
 const allCommands = () => {
   return async (ctx, next) => {
     
-    if (ctx.chat.type === "group") return;
+    if (!ctx.chat || ctx.chat.type === "group") return;
     
         // Commands
     if(ctx.message && ctx.message.text){

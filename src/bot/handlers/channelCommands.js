@@ -193,7 +193,7 @@ const addChannel = () => {
             }
 
             const params = {
-                firstName: from.first_name,
+                firstName: removeTag(from.first_name),
                 channelName: title,
                 channelId: id,
                 botUsername: "@" + username
@@ -266,7 +266,7 @@ const addChannel = () => {
                 }
     
                 const params = {
-                    firstName: from.first_name,
+                    firstName: removeTag(from.first_name),
                     channelName: title,
                     channelId: id
                 }
@@ -298,7 +298,7 @@ const addChannel = () => {
 
                 console.log("error " + error);
                 const params = {
-                    firstName: from.first_name,
+                    firstName: removeTag(from.first_name),
                 }
 
                 return ctx.reply(formatText(notfound_error, params), {
