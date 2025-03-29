@@ -36,7 +36,7 @@ const startMiniApp = async () => {
                 return reply.status(403).send({ error: "Acesso Negado"})
             }
             
-            return reply.sendFile('index.html');
+            return reply.sendFile('user.html');
         } catch (error) {
             
         }
@@ -45,8 +45,12 @@ const startMiniApp = async () => {
     
     server.register(apiRouter, { prefix: "/api" })
     
-    server.get('/', (request, reply) => {
+    server.get('/ping', (request, reply) => {
         reply.send({ hello: 'world' })
+    })
+
+    server.setNotFoundHandler((request, reply) => {
+        return reply.sendFile('index.html');
     })
     
     // Run the server!

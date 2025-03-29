@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador de Canal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script async src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="/public/css/styles.css">
+  <script defer src="/public/js/scripts.js"></script>
+</head>
+<body>
+  <div class="backdrop" id="backdrop"></div>
+  <div class="toast" id="toast">
+    <i class="toast-icon fas fa-check-circle"></i>
+    <span class="toast-message" id="toastMessage">Operação realizada com sucesso!</span>
+  </div>
+
+  <div class="container">
+    <header class="header">
+      <h1 id="channelName">Carregando...</h1>
+      <div class="icon-button settings-icon" id="settingsIcon">
+        <i class="fas fa-cog"></i>
+      </div>
+    </header>
+
+    <!-- Configurações -->
+    <div class="settings-menu hidden" id="settingsMenu">
+      <h4 class="settings-menu-title">CONFIGURAÇÕES DE MÍDIA</h4>
+      <label>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="message">
+          <span class="toggle"></span>
+        </div>
+        Mensagens de texto
+      </label>
+      <label>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="sticker">
+          <span class="toggle"></span>
+        </div>
+        Stickers
+      </label>
+      <label>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="audio">
+          <span class="toggle"></span>
+        </div>
+        Áudios
+      </label>
+      <label>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="video">
+          <span class="toggle"></span>
+        </div>
+        Vídeos
+      </label>
+      <label>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="photo">
+          <span class="toggle"></span>
+        </div>
+        Fotos
+      </label>
+      <label>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="gif">
+          <span class="toggle"></span>
+        </div>
+        GIFs
+      </label>
+    </div>
+
+    <!-- Card de Legenda -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Legenda</h2>
+        <div id="captionStatus" class="hidden">
+          <div class="loader"></div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-control">
+          <textarea id="caption" readonly placeholder="Legenda para suas mensagens..."></textarea>
+        </div>
+        <div class="btn-group">
+          <button id="editCaptionBtn" class="btn btn-primary">
+            <i class="fas fa-edit"></i>&nbsp;Editar
+          </button>
+          <button id="saveCaptionBtn" class="btn btn-success hidden">
+            <i class="fas fa-save"></i>&nbsp;Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card de Botões -->
+    <div class="card">
+      <div class="card-header">
+        <div class="tabs">
+          <div class="tab active" data-tab="buttons">
+            <i class="fas fa-list"></i>&nbsp;Botões
+          </div>
+          <div class="tab" data-tab="newButton">
+            <i class="fas fa-plus"></i>&nbsp;Adicionar
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Tab de Lista de Botões -->
+        <div id="buttonsTab" class="tab-content active">
+          <div id="buttonsContainer" class="button-list">
+            <div class="loading-state">
+              <div class="loader"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab de Novo Botão -->
+        <div id="newButtonTab" class="tab-content hidden">
+          <form id="newButtonForm" class="button-form">
+            <div class="form-control">
+              <input type="text" id="newButtonName" placeholder="Nome do botão" required>
+            </div>
+            <div class="form-control">
+              <input type="text" id="newButtonUrl" placeholder="URL (https://) ou Username (@usuario)" required>
+            </div>
+            <div class="btn-group">
+              <button type="submit" id="saveButtonBtn" class="btn btn-success">
+                <i class="fas fa-save"></i>&nbsp;Salvar
+              </button>
+              <button type="button" id="cancelButtonBtn" class="btn btn-secondary">
+                <i class="fas fa-times"></i>&nbsp;Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
