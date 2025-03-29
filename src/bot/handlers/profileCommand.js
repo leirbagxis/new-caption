@@ -55,7 +55,7 @@ const profileCommand = () => {
                     const channelId = data.split("_")
                     const channelInfo = userInfo.channel.find(channel => channel.channelId === BigInt(channelId[1]))
                                         
-                    params["channelName"] = channelInfo.title
+                    params["channelName"] = removeTag(channelInfo.title)
                     params["channelId"] = channelId[1]
 
                     const paramsB = {

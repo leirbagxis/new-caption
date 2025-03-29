@@ -14,7 +14,7 @@ RUN npm install
 
 # Gera o Prisma Client
 RUN npx prisma generate
-
+RUN npx prisma migrate deploy
 # Copia o restante do código
 COPY . .
 

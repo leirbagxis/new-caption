@@ -29,7 +29,7 @@ const channelCommands = () => {
                     const channelId = data.split("_")
                     const channelInfo = userInfo.channel.find(channel => channel.channelId === BigInt(channelId[1]))
                                         
-                    params["channelName"] = channelInfo.title
+                    params["channelName"] = removeTag(channelInfo.title)
                     params["channelId"] = channelId[1]
 
                     const deleteChannelButton = [
@@ -56,7 +56,7 @@ const channelCommands = () => {
                     const channelId = data.split("_")
                     const channelInfo = userInfo.channel.find(channel => channel.channelId === BigInt(channelId[1]))
                                         
-                    params["channelName"] = channelInfo.title
+                    params["channelName"] = removeTag(channelInfo.title)
                     params["channelId"] = channelId[1]
 
                     const paramsB = {
@@ -80,7 +80,7 @@ const channelCommands = () => {
                     const channelId = data.split("_")
                     const channelInfo = userInfo.channel.find(channel => channel.channelId === BigInt(channelId[1]))
                                         
-                    params["channelName"] = channelInfo.title
+                    params["channelName"] = removeTag(channelInfo.title)
                     params["channelId"] = channelId[1]
 
                     const deleteChannel = await deleteChannelById(channelInfo.ownerId, channelInfo.channelId)
@@ -113,7 +113,7 @@ const channelCommands = () => {
 
                     const reloadConfig = await updateChannelService({
                         channelId: getTgInfoChannel.id,
-                        title: getTgInfoChannel.title,
+                        title: removeTag(getTgInfoChannel.title),
                         inviteUrl: getTgInfoChannel.invite_link
                     })
 
@@ -186,7 +186,7 @@ const addChannel = () => {
             
             const payload = {
                 channelId: id,
-                title,
+                title: removeTag(title),
                 username: username || "n/a",
                 type,
                 ownerId: from.id
@@ -194,7 +194,7 @@ const addChannel = () => {
 
             const params = {
                 firstName: removeTag(from.first_name),
-                channelName: title,
+                channelName: removeTag(title),
                 channelId: id,
                 botUsername: "@" + username
             }
@@ -267,13 +267,13 @@ const addChannel = () => {
     
                 const params = {
                     firstName: removeTag(from.first_name),
-                    channelName: title,
+                    channelName: removeTag(title),
                     channelId: id
                 }
     
                 const payload = {
                     channelId: id,
-                    title,
+                    title: removeTag(title),
                     username: username || "n/a",
                     ownerId: from.id
                 }
@@ -332,7 +332,7 @@ const addChannel = () => {
                 const payload = {
                     ownerId: user.id,
                     channelId: channel.id,
-                    title: channel.title,
+                    title: removeTag(channel.title),
                     inviteUrl: channel.invite_link
                 }
 
@@ -391,7 +391,7 @@ const editCaption = () => {
 
             const updatePayload = {
                 channelId: chat.id,
-                title: chat.title
+                title: removeTag(chat.title)
             }
             await updateChannelService(updatePayload)
             
@@ -401,7 +401,7 @@ const editCaption = () => {
 
             const channelParams = {
                 botUsername: "t.me/" + ctx.botInfo.username,
-                title: getChannel.title,
+                title: removeTag(channel.title),
                 invite: getChannel.active_usernames?.[0]
                         ? "t.me/" + getChannel.active_usernames[0]
                         : getChannel.invite_link
@@ -732,7 +732,7 @@ const claimOwnerShip = () => {
                     channelId: getChannel.channelId,
                     channelName: getChannel.title,
                     ownerId: getChannel.ownerId,
-                    ownerName: getUser.first_name
+                    ownerName: removeTag(getUser.first_name)
                 }
                 
 
