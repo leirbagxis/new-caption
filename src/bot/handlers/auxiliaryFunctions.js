@@ -1,4 +1,6 @@
-import { applyEntities, createKeyboard, detectParseMode, formatText, logNotMsg, sleep } from "../util.js";
+import { getChannelByChannelID } from "../sevices/channelService.js";
+import { applyEntities, createKeyboard, detectParseMode, formatText, logNotMsg, removeTag, sleep } from "../util.js";
+//const groupedMessagesMap = {};
 
 const getMessageType = (channelPost) => {
     if (channelPost.text) return 'message';
@@ -33,7 +35,6 @@ const processMessage = async (ctx, messageType, channel, channelParams, buttons,
       await logNotMsg(ctx, messageTypeToDisplayName(messageType));
     }
 }
-
 
 const messageTypeToDisplayName = (messageType) => {
     const displayNames = {
@@ -109,22 +110,155 @@ const processStickerMessage = async (ctx, channel, buttons) => {
       inline_keyboard: userButton
     });
 }
-  
+
+// Editar Fotos, videos em grupos
+const groupedMessagesMap = new Map();
+
 const processMediaMessage = async(ctx, messageType, channel, channelParams, buttons) => {
-    if (messageType === 'gif') {
-      await sleep(500); // Evita rate limiting para GIFs
+    const channelPost = ctx.channelPost;
+    const { media_group_id: groupId, message_id: messageId, caption = '', caption_entities } = channelPost;
+    
+    if (groupId) {
+        await handleGroupedMessage(ctx, channelPost, messageId, groupId);
+        return;
     }
-  
-    let { caption = '', caption_entities } = ctx.channelPost;
     
-    const formatCaption = formatText(channel.caption, channelParams);
-    const parsedCaption = detectParseMode(formatCaption);
-    const newCaption = applyEntities(`${caption}\n\n${parsedCaption}`, caption_entities);
-    
-    await ctx.editMessageCaption(newCaption, {
-      parse_mode: 'HTML',
-      ...createKeyboard(buttons, 1)
+    await editMessageCaption(ctx, {
+        caption,
+        caption_entities,
+        channelCaption: channel.caption,
+        channelParams,
+        buttons
     });
+}
+
+async function handleGroupedMessage(ctx, message, messageId, groupId) {
+    if (!groupedMessagesMap.has(groupId)) {
+        groupedMessagesMap.set(groupId, {
+            messages: [],
+            timeoutId: null
+        });
+    }
+    
+    const group = groupedMessagesMap.get(groupId);
+    
+    group.messages.push({
+        messageId,
+        message,
+        context: ctx
+    });
+    
+    if (group.timeoutId) {
+        clearTimeout(group.timeoutId);
+    }
+    
+    group.timeoutId = setTimeout(() => {
+        processGroupedMessages(groupId)
+            .finally(() => {
+              groupedMessagesMap.delete(groupId);
+            });
+    }, 1000);
+}
+
+function prepareCaption(originalCaption, captionEntities, channelCaption, channelParams) {
+    const formatCaption = formatText(channelCaption, channelParams);
+    const parsedCaption = detectParseMode(formatCaption);
+    
+    return {
+        text: originalCaption ? `${originalCaption}\n\n${parsedCaption}` : parsedCaption,
+        entities: captionEntities
+    };
+}
+
+async function editMessageCaption(ctx, options) {
+    const { caption, caption_entities, channelCaption, channelParams, buttons, chatId, messageId } = options;
+    
+    const { text, entities } = prepareCaption(caption, caption_entities, channelCaption, channelParams);
+    const newCaption = entities ? applyEntities(text, entities) : text;
+    
+    const editOptions = {
+        parse_mode: 'HTML',
+        ...createKeyboard(buttons, 1)
+    };
+    
+    try {
+        if (chatId && messageId) {
+          
+            await ctx.telegram.editMessageCaption(
+                chatId,
+                messageId,
+                undefined,
+                newCaption,
+                editOptions
+            );
+        } else {
+            // Editar mensagem atual
+            await ctx.editMessageCaption(newCaption, editOptions);
+        }
+    } catch (error) {
+        console.error('Erro ao editar legenda:', error.message);
+    }
+}
+
+async function processGroupedMessages(groupId) {
+    const group = groupedMessagesMap.get(groupId);
+    
+    if (!group || group.messages.length === 0) {
+        return;
+    }
+    
+    await editGroupedMessages(group.messages);
+}
+
+async function editGroupedMessages(messages) {
+    if (messages.length === 0) return;
+    
+    try {
+        const firstMsg = messages[0];
+        const ctx = firstMsg.context;
+        const chatId = ctx.chat.id;
+        
+        const [channel, getChannel] = await Promise.all([
+            getChannelByChannelID(chatId),
+            ctx.telegram.getChat(chatId).catch(error => {
+                console.error(`Erro ao obter informações do canal ${chatId}:`, error.message);
+                return null;
+            })
+        ]);
+        
+        if (!getChannel) return;
+        
+        const channelParams = {
+            botUsername: `t.me/${ctx.botInfo.username}`,
+            title: removeTag(channel.title),
+            invite: getChannel.active_usernames?.[0]
+                ? `t.me/${getChannel.active_usernames[0]}`
+                : getChannel.invite_link
+        };
+        
+        const buttons = channel.buttons.map(btn => ({
+            text: btn.text,
+            url: btn.url
+        }));
+        
+        const messageWithCaption = messages.find(msg => msg.message.caption);
+        const messageIdToEdit = messageWithCaption?.messageId || firstMsg.messageId;
+        const caption = messageWithCaption?.message.caption || '';
+        const caption_entities = messageWithCaption?.message.caption_entities;
+        
+        await editMessageCaption(ctx, {
+            caption,
+            caption_entities,
+            channelCaption: channel.caption,
+            channelParams,
+            buttons,
+            chatId,
+            messageId: messageIdToEdit
+        });
+        
+    } catch (error) {
+        console.error('Erro ao editar mensagens agrupadas:', error.message);
+    }
 }
 
 

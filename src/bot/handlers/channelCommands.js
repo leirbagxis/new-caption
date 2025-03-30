@@ -729,22 +729,20 @@ const claimOwnerShip = () => {
 const editCaption = () => {
     return async (ctx, next) => {
       try {
-        // Verifica se é uma postagem de canal
+        
         if (!ctx.channelPost) {
           return next();
         }
   
         const { chat, message_id } = ctx.channelPost;
         const channelId = chat.id;
-  
-        // Atualiza informações do canal no banco de dados
+        
         const channelTitle = removeTag(chat.title);
         await updateChannelService({
           channelId,
           title: channelTitle
         });
-  
-        // Obtém o canal do banco de dados
+        
         const channel = await getChannelByChannelID(BigInt(channelId));
         if (!channel) {
           console.log(`Canal não encontrado: ${channelId}`);
@@ -759,8 +757,7 @@ const editCaption = () => {
         if (!getChannel) {
           return next();
         }
-  
-        // Prepara parâmetros para formatação do texto
+        
         const channelParams = {
           botUsername: `t.me/${ctx.botInfo.username}`,
           title: removeTag(channel.title),
@@ -768,20 +765,17 @@ const editCaption = () => {
             ? `t.me/${getChannel.active_usernames[0]}`
             : getChannel.invite_link
         };
-  
-        // Prepara os botões para o teclado inline
+        
         const buttons = channel.buttons.map(btn => ({
           text: btn.text,
           url: btn.url
         }));
-  
-        // Determina o tipo de mensagem e aplica a operação adequada
+        
         const messageType = getMessageType(ctx.channelPost);
         if (!messageType || !channel.settings[messageType]) {
           return next();
         }
-  
-        // Processa a mensagem com base no tipo
+        
         await processMessage(ctx, messageType, channel, channelParams, buttons, channelId, message_id);
         
         console.log(`${messageType} editado - (${channelId} - ${chat.title})`);
