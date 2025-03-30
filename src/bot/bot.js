@@ -6,13 +6,13 @@ import { addChannel, channelCommands, claimOwnerShip, editCaption } from "./hand
 // Bot init
 const startBot = async () => {
     const bot = new Telegraf(process.env.BOT_TOKEN)
-
-    bot.use(editCaption())
-    bot.use(addChannel())
-    bot.use(claimOwnerShip())
-    bot.use(channelCommands())
+    
     bot.use(profileCommand())
     bot.use(allCommands())
+    bot.use(claimOwnerShip())
+    bot.use(channelCommands())
+    bot.use(editCaption())
+    bot.use(addChannel())
 
     bot.launch(() => {
         console.log("Bot Online");    

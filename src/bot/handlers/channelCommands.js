@@ -3,7 +3,7 @@ import { getUserById, saveUser } from "../sevices/userService.js"
 import { applyEntities, commands, createKeyboard, detectParseMode, formatButtons, formatText, generateNumericId, logNotMsg, randomId, removeTag, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
 import { generationSignedUrl } from "../../security/authSignature.js";
-import { Markup } from "telegraf";
+import { getMessageType, processMessage } from "./auxiliaryFunctions.js";
 
 const channelCommands = () => {
     return async(ctx, next) => {
@@ -380,214 +380,6 @@ const addChannel = () => {
     }
 }
 
-const editCaption = () => {
-
-    return async(ctx, next) => {
-        
-        if(ctx.channelPost) {
-
-            const { chat, message_id } = ctx.channelPost
-            const channelId = chat.id
-
-            const updatePayload = {
-                channelId: chat.id,
-                title: removeTag(chat.title)
-            }
-            await updateChannelService(updatePayload)
-            
-            const channel = await getChannelByChannelID(BigInt(channelId))
-            if(!channel) return;
-            const getChannel = await ctx.telegram.getChat(channelId)
-
-            const channelParams = {
-                botUsername: "t.me/" + ctx.botInfo.username,
-                title: removeTag(channel.title),
-                invite: getChannel.active_usernames?.[0]
-                        ? "t.me/" + getChannel.active_usernames[0]
-                        : getChannel.invite_link
-            }
-
-            const buttons = channel.buttons.map(btn => ({
-                text: btn.text,
-                url: btn.url
-            }))
-
-            // ### Edit Message Applied Caption
-            if(ctx.channelPost.text && channel.settings.message) {
-                try {
-
-                    const {text, entities } = ctx.channelPost
-                    const caption = formatText(channel.caption, channelParams)
-                    const parsedCaption = detectParseMode(caption)
-                    const newCaption = applyEntities(`${text}\n\n${parsedCaption}`, entities)
-                    
-                    const edit = await ctx.editMessageText(newCaption, {
-                        parse_mode: "HTML",
-                        ...createKeyboard(buttons, 1)
-                    })
-
-                    if(edit) {
-                        console.log(`text edited - (${channelId} - ${chat.title})`)
-                    }
-                } catch (error) {
-                    console.log(error);
-                    return await logNotMsg(ctx, "Mensagem")
-                }
-            }
-
-            // ### Edit Audio Applied Caption
-            if(ctx.channelPost.audio && channel.settings.audio) {
-                try {
-                    await sleep(500);
-                    const caption = formatText(channel.caption, channelParams)
-                    const parsedCaption = detectParseMode(caption)
-
-                    const { media_group_id, message_id, audio } = ctx.channelPost
-
-                    if(media_group_id){
-
-                        try {
-                            
-                            const userButton = channel.buttons.map(btn=> [{
-                                text: btn.text,
-                                url: btn.url
-                            }])
-                            
-                            const edit = await ctx.replyWithAudio(audio.file_id, {
-                                caption: formatText(parsedCaption),
-                                parse_mode: "HTML",
-                                reply_markup: {
-                                    inline_keyboard: userButton
-                                }
-                            });
-                            await ctx.deleteMessage(message_id)
-                            return edit
-
-                        } catch (error) {
-                            await ctx.telegram.editMessageCaption(channelId, message_id, null, formatText(parsedCaption), {
-                                parse_mode: "HTML",
-                                ...createKeyboard(buttons, 1)
-                            })
-                        }
-                    }
-                    
-                    const edit = await ctx.telegram.editMessageCaption(channelId, message_id, null, formatText(parsedCaption), {
-                        parse_mode: "HTML",
-                        ...createKeyboard(buttons, 1)
-                    })
-
-                    if(edit) {
-                        console.log(`audio edited - (${channelId} - ${chat.title})`)
-                    }
-                } catch (error) {
-                    console.log(error);
-                    return await logNotMsg(ctx, "Audio")
-                }
-            }
-            
-            // ### Edit Sticker Applied Caption
-            if(ctx.channelPost.sticker && channel.settings.sticker) {
-                try {
-                    const userButton = channel.buttons.map(btn=> [{
-                        text: btn.text,
-                        url: btn.url
-                    }])
-
-                    const edit = await ctx.editMessageReplyMarkup({
-                        inline_keyboard: userButton
-                    })
-
-                    if(edit) {
-                        console.log(`sticker edited - (${channelId} - ${chat.title})`)
-                    }
-                } catch (error) {
-                    console.log(error);
-                    return await logNotMsg(ctx, "Sticker")
-                }
-            }            
-
-            // ### Edit Video Applied Caption
-            if(ctx.channelPost.video && channel.settings.video) {
-                try {
-
-                    var { caption, caption_entities } = ctx.channelPost
-                    if(caption === undefined) {
-                        caption = ""
-                    }
-                    const formatCaption = formatText(channel.caption, channelParams)
-                    const parsedCaption = detectParseMode(formatCaption)
-                    const newCaption = applyEntities(`${caption}\n\n${parsedCaption}`, caption_entities)
-                    
-                    const edit = await ctx.editMessageCaption(newCaption, {
-                        parse_mode: "HTML",
-                        ...createKeyboard(buttons, 1)
-                    })
-
-                    if(edit) {
-                        console.log(`video edited - (${channelId} - ${chat.title})`)
-                    }
-                } catch (error) {
-                    console.log(error);
-                    return await logNotMsg(ctx, "Video")
-                }
-            }
-
-            // ### Edit Photo Applied Caption
-            if(ctx.channelPost.photo && channel.settings.photo) {
-                try {
-
-                    var { caption, caption_entities } = ctx.channelPost
-                    if(caption === undefined) {
-                        caption = ""
-                    }
-
-                    const formatCaption = formatText(channel.caption, channelParams)
-                    const parsedCaption = detectParseMode(formatCaption)
-                    const newCaption = applyEntities(`${caption}\n\n${parsedCaption}`, caption_entities)
-                    
-                    const edit = await ctx.editMessageCaption(newCaption, {
-                        parse_mode: "HTML",
-                        ...createKeyboard(buttons, 1)
-                    })
-
-                    if(edit) {
-                        console.log(`photo edited - (${channelId} - ${chat.title})`)
-                    }
-                } catch (error) {
-                    console.log(error);
-                    return await logNotMsg(ctx, "Imagem")
-                }
-            }
-
-            // ### Edit Gif Applied Caption
-            if(ctx.channelPost.animation && channel.settings.gif) {
-                try {
-                    await sleep(500);
-                    const caption = formatText(channel.caption, channelParams)
-                    const parsedCaption = detectParseMode(caption)
-                    const edit = await ctx.editMessageCaption(parsedCaption, {
-                        parse_mode: "HTML",
-                        ...createKeyboard(buttons, 1)
-                    })
-
-                    if(edit) {
-                        console.log(`animation edited - (${channelId} - ${chat.title})`)
-                    }
-                } catch (error) {
-                    console.log(error);
-                    return await logNotMsg(ctx, "Animation")
-                }
-            }
-
-            
-        }
-
-
-        next()
-    }
-
-}
-
 const claimOwnerShip = () => {
     return async (ctx, next) => {        
         const bot = ctx.botInfo
@@ -931,6 +723,73 @@ const claimOwnerShip = () => {
                 },
             ], { cache_time: 0 });
         }
+    };
+};
+
+const editCaption = () => {
+    return async (ctx, next) => {
+      try {
+        // Verifica se é uma postagem de canal
+        if (!ctx.channelPost) {
+          return next();
+        }
+  
+        const { chat, message_id } = ctx.channelPost;
+        const channelId = chat.id;
+  
+        // Atualiza informações do canal no banco de dados
+        const channelTitle = removeTag(chat.title);
+        await updateChannelService({
+          channelId,
+          title: channelTitle
+        });
+  
+        // Obtém o canal do banco de dados
+        const channel = await getChannelByChannelID(BigInt(channelId));
+        if (!channel) {
+          console.log(`Canal não encontrado: ${channelId}`);
+          return next();
+        }
+  
+        const getChannel = await ctx.telegram.getChat(channelId).catch(error => {
+          console.error(`Erro ao obter informações do canal ${channelId}:`, error);
+          return null;
+        });
+  
+        if (!getChannel) {
+          return next();
+        }
+  
+        // Prepara parâmetros para formatação do texto
+        const channelParams = {
+          botUsername: `t.me/${ctx.botInfo.username}`,
+          title: removeTag(channel.title),
+          invite: getChannel.active_usernames?.[0]
+            ? `t.me/${getChannel.active_usernames[0]}`
+            : getChannel.invite_link
+        };
+  
+        // Prepara os botões para o teclado inline
+        const buttons = channel.buttons.map(btn => ({
+          text: btn.text,
+          url: btn.url
+        }));
+  
+        // Determina o tipo de mensagem e aplica a operação adequada
+        const messageType = getMessageType(ctx.channelPost);
+        if (!messageType || !channel.settings[messageType]) {
+          return next();
+        }
+  
+        // Processa a mensagem com base no tipo
+        await processMessage(ctx, messageType, channel, channelParams, buttons, channelId, message_id);
+        
+        console.log(`${messageType} editado - (${channelId} - ${chat.title})`);
+      } catch (error) {
+        console.error('Erro ao processar mensagem:', error);
+      }
+  
+      return next();
     };
 };
 
