@@ -1,162 +1,307 @@
-import { deleteChannelById, getChannelByChannelID, getChannelbyId, saveChannelService, updateChannelService, updateOwnerChannelService } from "../sevices/channelService.js";
+import { createChannelButtonService, deleteChannelById, getChannelByChannelID, getChannelbyId, saveChannelService, updateChannelService, updateOwnerChannelService } from "../sevices/channelService.js";
 import { getUserById, saveUser } from "../sevices/userService.js"
 import { applyEntities, commands, createKeyboard, detectParseMode, formatButtons, formatText, generateNumericId, logNotMsg, randomId, removeTag, sleep } from "../util.js";
 import { createCache, getCacheSession, deleteCache  } from "../sevices/cacheService.js";
 import { generationSignedUrl } from "../../security/authSignature.js";
 import { getMessageType, processMessage } from "./auxiliaryFunctions.js";
 
+
 const channelCommands = () => {
-    return async(ctx, next) => {
+    const commandsCache = {
+        'profile.user.channels.mychannel': commands["profile.user.channels.mychannel"],
+        'start': commands["start"]
+    };
+
+    const callbackHandlers = {
+        'del_': handleDeleteConfirmation,
+        'can_': handleCancelDelete,
+        'ex_': handleExecuteDelete,
+        'rr_': handleReloadChannelConfig,
+        'gc:': handleGroupChannelsConfirmation,
+        'gcYes:': handleGroupChannels,
+        'cf_': handleChannelConfig
+    };
+
+    // Função para criar botões de forma padronizada
+    const createNavigationButtons = (type, channelId) => {
+        const buttonSets = {
+            'delete': [
+                { text: "Excluir", callback_data: `ex_${channelId}` },
+                { text: "Cancelar", callback_data: `can_${channelId}` }
+            ],
+            'back': [
+                { text: "⬅️ Voltar", callback_data: `cf_${channelId}` }
+            ],
+            'home': [
+                { text: "⬅️ Voltar", callback_data: "profile.user.channels" },
+                { text: "🏠 Início", callback_data: "start" }
+            ],
+            'groupConfirm': [
+                { text: "Confirmar", callback_data: `gcYes:${channelId}` },
+                { text: "Cancelar", callback_data: `can_${channelId}` }
+            ]
+        };
         
-        try {           
+        return buttonSets[type] || [];
+    };
+
+    // Função auxiliar para editar mensagens
+    const editResponseMessage = async (ctx, message, buttons, columns = 2) => {
+        return ctx.editMessageText(message, {
+            parse_mode: "HTML",
+            ...createKeyboard(buttons, columns)
+        });
+    };
+
+    // Função para obter informações do canal pela dn
+    const getChannelInfo = (userInfo, channelId) => {
+        const numericChannelId = BigInt(channelId);
+        return userInfo.channel.find(channel => channel.channelId === numericChannelId);
+    };
+
+    // Handler para confirmação de exclusão
+    async function handleDeleteConfirmation(ctx, user, userInfo, data) {
+        const { confirm_delete } = commandsCache['profile.user.channels.mychannel'];
+        const channelId = data.split("_")[1];
+        const channelInfo = getChannelInfo(userInfo, channelId);
+        
+        if (!channelInfo) return handleError(ctx);
+        
+        const params = {
+            userId: user.id,
+            firstName: removeTag(user.first_name),
+            channelName: removeTag(channelInfo.title),
+            channelId: channelId
+        };
+
+        const deleteButtons = createNavigationButtons('delete', channelId);
+        return editResponseMessage(ctx, formatText(confirm_delete, params), deleteButtons);
+    }
+
+    // Handler para cancelar exclusão
+    async function handleCancelDelete(ctx, user, userInfo, data) {
+        await ctx.answerCbQuery("Operação cancelada!..");
+        
+        const { message, buttons, channel_buttons } = commandsCache['profile.user.channels.mychannel'];
+        const channelId = data.split("_")[1];
+        const channelInfo = getChannelInfo(userInfo, channelId);
+        
+        if (!channelInfo) return handleError(ctx);
+        
+        const params = {
+            userId: user.id,
+            firstName: removeTag(user.first_name),
+            channelName: removeTag(channelInfo.title),
+            channelId: channelId
+        };
+
+        const paramsB = {
+            webAppUrl: process.env.WEBAPP_URL,
+            userId: user.id,
+            channelId: channelId,
+            signatureHash: generationSignedUrl(user.id, channelId)
+        };
+
+        const repackButtons = formatButtons(channel_buttons, paramsB);
+        return editResponseMessage(ctx, formatText(message, params), [...repackButtons, ...buttons], 1);
+    }
+
+    // Handler para executar exclusão
+    async function handleExecuteDelete(ctx, user, userInfo, data) {
+        const { success_delete } = commandsCache['profile.user.channels.mychannel'];
+        const channelId = data.split("_")[1];
+        const channelInfo = getChannelInfo(userInfo, channelId);
+        
+        if (!channelInfo) return handleError(ctx);
+        
+        const params = {
+            userId: user.id,
+            firstName: removeTag(user.first_name),
+            channelName: removeTag(channelInfo.title),
+            channelId: channelId
+        };
+
+        try {
+            const deleteChannel = await deleteChannelById(channelInfo.ownerId, channelInfo.channelId);
+            if (!deleteChannel) return handleError(ctx);
             
-            // Edit Messages Commands
-            if(ctx.callbackQuery) {
-                const user = await ctx.from;                
-                const params = {
-                    userId: user.id,
-                    firstName: removeTag(user.first_name)
-                }
-                const save = await saveUser(params)
-                const { data } = ctx.callbackQuery
-                
-                const userInfo = await getUserById(user.id)                       
-                
-                // # Confirmacao para excluir o canal do bot
-                if(data.startsWith('del_')) {
-                    
-                    const { confirm_delete, buttons } = commands["profile.user.channels.mychannel"];
-                    const channelId = data.split("_")
-                    const channelInfo = userInfo.channel.find(channel => channel.channelId === BigInt(channelId[1]))
-                                        
-                    params["channelName"] = removeTag(channelInfo.title)
-                    params["channelId"] = channelId[1]
-
-                    const deleteChannelButton = [
-                        {
-                            text: "Excluir",
-                            callback_data: "ex_" + channelId[1]
-                        },
-                        {
-                            text: "Cancelar",
-                            callback_data: "can_" + channelId[1]
-                        }
-                    ]                    
-
-                    return ctx.editMessageText(formatText(confirm_delete, params), {
-                        parse_mode: "HTML",
-                        ...createKeyboard(deleteChannelButton)
-                    })
-                }
-                
-                // # Cancelar acao de excluir o canal do bot
-                if(data.startsWith('can_')) {
-                    await ctx.answerCbQuery("Operacao cancelada!..")
-                    const { message, buttons, channel_buttons } = commands["profile.user.channels.mychannel"];
-                    const channelId = data.split("_")
-                    const channelInfo = userInfo.channel.find(channel => channel.channelId === BigInt(channelId[1]))
-                                        
-                    params["channelName"] = removeTag(channelInfo.title)
-                    params["channelId"] = channelId[1]
-
-                    const paramsB = {
-                        webAppUrl: process.env.WEBAPP_URL,
-                        userId: user.id,
-                        channelId: channelId[1]
-                    }                    
-
-                    const repackButtons = formatButtons(channel_buttons, paramsB)
-
-                    return ctx.editMessageText(formatText(message, params), {
-                        parse_mode: "HTML",
-                        ...createKeyboard([...repackButtons, ...buttons], 1)
-                    })
-                }
-
-                // # Excluir o canal em definitivo
-                if(data.startsWith('ex_')) {
-                    
-                    const { success_delete, buttons } =  commands["profile.user.channels.mychannel"];
-                    const channelId = data.split("_")
-                    const channelInfo = userInfo.channel.find(channel => channel.channelId === BigInt(channelId[1]))
-                                        
-                    params["channelName"] = removeTag(channelInfo.title)
-                    params["channelId"] = channelId[1]
-
-                    const deleteChannel = await deleteChannelById(channelInfo.ownerId, channelInfo.channelId)
-
-                    if (deleteChannel) {
-                        const finalButtons = [
-                            {
-                                text: "⬅️ Voltar",
-                                callback_data: "profile.user.channels"
-                            },
-                            {
-                                text: "🏠 Início",
-                                callback_data: "start"
-                            }
-                        ]                    
-    
-                        return ctx.editMessageText(formatText(success_delete, params), {
-                            parse_mode: "HTML",
-                            ...createKeyboard(finalButtons)
-                        })                        
-                    }                   
-
-                }
-
-                // # Recarregar dados e salvar mudancas de um canal
-                if(data.startsWith('rr_')) {
-                    const { message, reconfigure_message, reconfigure_failure, buttons } =  commands["profile.user.channels.mychannel"];
-                    const channelId = data.split("_")
-                    const getTgInfoChannel = await ctx.telegram.getChat(channelId[1])
-
-                    const reloadConfig = await updateChannelService({
-                        channelId: getTgInfoChannel.id,
-                        title: removeTag(getTgInfoChannel.title),
-                        inviteUrl: getTgInfoChannel.invite_link
-                    })
-
-                    const button = [
-                        {
-                            text: "⬅️ Voltar",
-                            callback_data: "cf_" + channelId[1]
-                        },
-                        {
-                            text: "📝 Meus Canais",
-                            callback_data: "profile.user.channels"
-                        }
-                    ] 
-
-                    if(!reloadConfig) {
-                        return ctx.editMessageText(reconfigure_failure, {
-                            parse_mode: "HTML",
-                            ...createKeyboard(button)
-                        })
-                    }
-
-                    return ctx.editMessageText(reconfigure_message, {
-                        parse_mode: "HTML",
-                            ...createKeyboard(button)
-                    })                        
-
-                }
-
-            }
-
+            const homeButtons = createNavigationButtons('home');
+            return editResponseMessage(ctx, formatText(success_delete, params), homeButtons);
         } catch (error) {
-            console.log("erro ao atualizar " + error);
-            const { message, buttons } = commands["start"]
+            console.error("Erro ao excluir canal:", error);
+            return handleError(ctx);
+        }
+    }
 
-            return ctx.editMessageText(formatText("<b>❌ Clique no Botão Abaixo!</b>"), {
-                parse_mode:  "HTML",
-                ...createKeyboard(buttons)
-            })
+    // Handler para recarregar configuração do canal
+    async function handleReloadChannelConfig(ctx, user, userInfo, data) {
+        const { reconfigure_message, reconfigure_failure } = commandsCache['profile.user.channels.mychannel'];
+        const channelId = data.split("_")[1];
+        
+        try {
+            const getTgInfoChannel = await ctx.telegram.getChat(channelId);
+            
+            const updateData = {
+                channelId: getTgInfoChannel.id,
+                title: removeTag(getTgInfoChannel.title),
+                inviteUrl: getTgInfoChannel.invite_link
+            };
+            
+            const reloadConfig = await updateChannelService(updateData);
+            const backButtons = createNavigationButtons('back', channelId);
+            
+            const message = reloadConfig ? reconfigure_message : reconfigure_failure;
+            return editResponseMessage(ctx, message, backButtons);
+        } catch (error) {
+            console.error("Erro ao recarregar configuração:", error);
+            return handleError(ctx);
+        }
+    }
+
+    // Handler para confirmação de agrupamento de canais
+    async function handleGroupChannelsConfirmation(ctx, user, userInfo, data) {
+        const { gc_description } = commandsCache['profile.user.channels.mychannel'];
+        const channelId = data.split(":")[1];
+        const channelInfo = getChannelInfo(userInfo, channelId);
+        
+        if (!channelInfo) return handleError(ctx);
+        
+        const params = {
+            userId: user.id,
+            firstName: removeTag(user.first_name),
+            channelName: removeTag(channelInfo.title),
+            channelId: channelId
+        };
+
+        const groupConfirmButtons = createNavigationButtons('groupConfirm', channelId);
+        return editResponseMessage(ctx, formatText(gc_description, params), groupConfirmButtons);
+    }
+
+    // Handler para configuração de canal
+    async function handleChannelConfig(ctx, user, userInfo, data) {
+        // Implementação necessária para handleChannelConfig
+        // Esta função deveria ser chamada quando um usuário clica no botão "⬅️ Voltar"
+        return ctx.answerCbQuery("Retornando à configuração do canal...");
+    }
+
+    // Handler para agrupamento de canais
+    async function handleGroupChannels(ctx, user, userInfo, data) {
+        const channelId = data.split(":")[1];
+        const userChannelCount = userInfo.channel.length;
+        
+        // Verificação de número mínimo de canais
+        if (userChannelCount <= 1) {
+            return ctx.answerCbQuery("Obs... parece que você só possui 1 canal cadastrado", {
+                show_alert: true
+            });
         }
 
-        next()
+        const differentChannels = userInfo.channel.filter(cn => cn.channelId !== BigInt(channelId));
+        const thisChannel = userInfo.channel.find(cn => cn.channelId === BigInt(channelId));
+        
+        if (!thisChannel) return handleError(ctx);
+        
+        const params = {
+            userId: user.id,
+            firstName: removeTag(user.first_name),
+            channelName: removeTag(thisChannel.title),
+            channelId: channelId
+        };
+
+        try {
+            // Processando canais em lote em vez de um por um
+            const groupPromises = differentChannels.map(async (channel) => {
+                const getChannel = await ctx.telegram.getChat(Number(channel.channelId));
+                
+                const buttonUrl = getChannel.active_usernames?.[0]
+                    ? `t.me/${getChannel.active_usernames[0]}`
+                    : getChannel.invite_link;
+                    
+                // Verificação por índice para evitar iterações desnecessárias
+                const existButton = thisChannel.buttons.some(btn => 
+                    btn.text === channel.title && 
+                    btn.url === buttonUrl
+                );
+                
+                if (!existButton) {
+                    return await createChannelButtonService(userInfo.userId, channelId, {
+                        buttonName: channel.title,
+                        buttonUrl
+                    });
+                } else {
+                    return { 
+                        skipped: true, 
+                        channelId: channel.channelId.toString(),
+                        reason: "Botão já existe"
+                    };
+                }
+            });
+
+            const results = await Promise.all(groupPromises);
+            const { gc_confirm } = commandsCache['profile.user.channels.mychannel'];
+            
+            const added = results.filter(r => !r.skipped).length;
+            const skipped = results.filter(r => r.skipped).length;
+            
+            let message = formatText(gc_confirm, params);
+            if (skipped > 0) {
+                message += `\n\n<i>${skipped} canal(is) já estava(m) vinculado(s) e foi(ram) ignorado(s).</i>`;
+            }
+
+            const backButtons = createNavigationButtons('back', channelId);
+            return editResponseMessage(ctx, message, backButtons);
+        } catch (error) {
+            console.error("Erro ao agrupar canais:", error);
+            
+            const { gc_failure } = commandsCache['profile.user.channels.mychannel'];
+            const backButtons = createNavigationButtons('back', channelId);
+            
+            return editResponseMessage(ctx, formatText(gc_failure, params), backButtons);
+        }
     }
-}
+
+    // Handler para erros
+    function handleError(ctx) {
+        const { buttons } = commandsCache['start'];
+        return editResponseMessage(ctx, formatText("<b>❌ Clique no Botão Abaixo!</b>"), buttons);
+    }
+
+    // Função principal que é executada pelo middleware
+    return async (ctx, next) => {
+        if (!ctx.callbackQuery) return next();
+        
+        try {
+            const user = ctx.from;
+            const { data } = ctx.callbackQuery;
+            
+            // Verificações de segurança para evitar processamento desnecessário
+            if (!user || !data) return next();
+            
+            // Usar operações paralelas para melhorar performance
+            const [saveUserResult, userInfo] = await Promise.all([
+                saveUser({
+                    userId: user.id,
+                    firstName: removeTag(user.first_name)
+                }),
+                getUserById(user.id)
+            ]);
+            
+            if (!userInfo) return handleError(ctx);
+            
+            // Identificação do prefixo do comando para roteamento dinâmico
+            const prefix = Object.keys(callbackHandlers).find(prefix => data.startsWith(prefix));
+            if (prefix) {
+                return await callbackHandlers[prefix](ctx, user, userInfo, data);
+            }
+            
+            // Se não encontrou um handler específico, passa para o próximo middleware
+            return next();
+        } catch (error) {
+            console.error("Erro ao processar comando:", error);
+            return handleError(ctx);
+        }
+    };
+};
 
 const addChannel = () => {
     return async(ctx, next) => {

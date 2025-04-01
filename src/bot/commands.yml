@@ -31,6 +31,9 @@ commands:
     success_delete: "<b>✅ Canal Removido</b>\n\n<blockquote>O canal <b>{channelName}</b> foi removido com sucesso. As legendas automáticas não serão mais adicionadas a este canal.</blockquote>\n\n<b>Você pode adicioná-lo novamente a qualquer momento, se desejar.</b>"
     reconfigure_message: "<b>🔄 Dados Recarregados</b>\n\n<blockquote>As informações foram atualizadas com sucesso. Todas as alterações recentes já estão em vigor.</blockquote>\n\n<b>Se algo não estiver correto, tente novamente ou entre em contato com o suporte.</b>"
     reconfigure_failure: "<b>⚠️ Erro ao Recarregar Dados</b>\n\n<blockquote>Não foi possível atualizar as informações. Isso pode ter ocorrido devido a um problema temporário.</blockquote>\n\n<b>Tente novamente mais tarde.</b>"
+    gc_description: "<b>📌 Agrupamento de Canais</b>\n\n<blockquote>🔗 Este comando permite que você agrupe seus canais, exibindo os botões dos outros canais no canal selecionado.</blockquote>\n\n🛠️ <b>Como funciona?</b>\n➜ Se você tiver dois ou mais canais, pode vinculá-los para que os botões/plaquinhas de um canal apareçam no canal selecionado.\n➜ Isso facilita a navegação entre seus canais e melhora a experiência dos seus seguidores.\n\n⚙️ <b>Deseja prosseguir com o agrupamento?</b>\n✔️ Toque em 'Confirmar' para continuar.\n❌ Toque em 'Cancelar' para desistir."
+    gc_confirm: "<b>✅ Agrupamento Concluído</b>\n\n<blockquote>🔗 Os canais foram agrupados com sucesso! Agora, os botões/plaquinhas dos canais vinculados serão exibidos no canal selecionado.</blockquote>\n\n📌 Se precisar desfazer o agrupamento, basta acessar as configurações e remover a vinculação."
+    gc_failure: "<b>⚠️ Erro no Agrupamento</b>\n\n<blockquote>❌ Não foi possível agrupar os canais.</blockquote>\n\n🔍 Possíveis motivos:\n➜ O bot não est em um dos canais selecionados.\n➜ O bot não tem permissão para editar as postagens.\n➜ O canal informado não existe ou não está vinculado à sua conta.\n\n🔄 Verifique e tente novamente."
     buttons:
       - text: "⬅️ Voltar"
         callback_data: "profile.user.channels"
@@ -39,6 +42,8 @@ commands:
         webApp: "{webAppUrl}/{signatureHash}"
       - text: "🔑 Transferir Acesso"
         callback_data: "paccess:{channelId}"
+      - text: "🔗 Agrupar Canais"
+        callback_data: "gc:{channelId}"
       - text: "🔄 Recarregar Dados"
         callback_data: "rr_{channelId}"
       - text: "🗑️ Remover Canal"
